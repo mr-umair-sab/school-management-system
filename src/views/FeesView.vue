@@ -9,15 +9,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div class="p-4 bg-green-50 rounded-lg">
             <p class="text-gray-600">Total Collected</p>
-            <h3 class="text-2xl font-bold text-green-600">₹8,50,000</h3>
+            <h3 class="text-2xl font-bold text-green-600">RS:8,50,000</h3>
           </div>
           <div class="p-4 bg-yellow-50 rounded-lg">
             <p class="text-gray-600">Pending</p>
-            <h3 class="text-2xl font-bold text-yellow-600">₹3,50,000</h3>
+            <h3 class="text-2xl font-bold text-yellow-600">RS:3,50,000</h3>
           </div>
           <div class="p-4 bg-blue-50 rounded-lg">
             <p class="text-gray-600">Total Expected</p>
-            <h3 class="text-2xl font-bold text-blue-600">₹12,00,000</h3>
+            <h3 class="text-2xl font-bold text-blue-600">RS:12,00,000</h3>
           </div>
         </div>
 
@@ -36,7 +36,7 @@
               <tr class="border-b">
                 <td class="px-4 py-3">Sample Student</td>
                 <td class="px-4 py-3">10-A</td>
-                <td class="px-4 py-3">₹25,000</td>
+                <td class="px-4 py-3">RS:25,000</td>
                 <td class="px-4 py-3">
                   <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Paid</span>
                 </td>

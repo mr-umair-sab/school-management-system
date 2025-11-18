@@ -56,7 +56,7 @@
             <div>
               <div class="flex justify-between mb-2">
                 <span>Collected</span>
-                <span class="font-bold">₹85,000</span>
+                <span class="font-bold">RS:85,000</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div class="bg-green-500 h-2 rounded-full" style="width: 70%"></div>
@@ -65,7 +65,7 @@
             <div>
               <div class="flex justify-between mb-2">
                 <span>Pending</span>
-                <span class="font-bold">₹35,000</span>
+                <span class="font-bold">RS:35,000</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div class="bg-yellow-500 h-2 rounded-full" style="width: 30%"></div>
