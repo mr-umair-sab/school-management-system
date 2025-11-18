@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">School MS</h1>
+        <h1 class="text-3xl font-bold text-gray-800">Umair king</h1>
         <p class="text-gray-600 mt-2">Management System Login</p>
       </div>
 

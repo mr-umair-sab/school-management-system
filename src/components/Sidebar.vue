@@ -1,7 +1,7 @@
 <template>
   <aside class="bg-indigo-900 text-white w-64 min-h-screen p-4">
     <div class="mb-8">
-      <h1 class="text-2xl font-bold">School MS</h1>
+      <h1 class="text-2xl font-bold">Umair king</h1>
       <p class="text-indigo-300 text-sm">Management System</p>
     </div>
     
