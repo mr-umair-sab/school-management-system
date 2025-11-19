@@ -74,22 +74,52 @@
           <!-- Basic Information -->
           <div class="mb-6">
             <h4 class="text-lg font-bold mb-3 text-indigo-600">Basic Information</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input v-model="form.name" placeholder="Full Name *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.rollNumber" placeholder="Roll Number *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.class" placeholder="Class *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.section" placeholder="Section *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.dateOfBirth" type="date" placeholder="Date of Birth *" class="px-4 py-2 border rounded-lg" required />
-              <select v-model="form.gender" class="px-4 py-2 border rounded-lg" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+              <div>
+              <p class="font-bold">Full Name</p>
+              <input v-model="form.name" placeholder="Full Name *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Roll Number</p>
+                <input v-model="form.rollNumber" placeholder="Roll Number *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Class</p>
+              <input v-model="form.class" placeholder="Class *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Section</p>
+                <input v-model="form.section" placeholder="Section *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Date Of Birth</p>
+                <input v-model="form.dateOfBirth" type="date" placeholder="Date of Birth *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Gender</p>
+              <select v-model="form.gender" class="px-4 py-2 border rounded-lg w-full" required>
                 <option value="">Select Gender *</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
-              <input v-model="form.email" type="email" placeholder="Email *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.phone" placeholder="Phone *" class="px-4 py-2 border rounded-lg" required />
-              <input v-model="form.enrollmentDate" type="date" placeholder="Enrollment Date" class="px-4 py-2 border rounded-lg" />
-              <input v-model="form.previousSchool" placeholder="Previous School" class="px-4 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <p class="font-bold">Email</p>
+                <input v-model="form.email" type="email" placeholder="Email *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Phone Number</p>
+                <input v-model="form.phone" placeholder="Phone *" class="px-4 py-2 border rounded-lg w-full" required />
+              </div>
+              <div>
+                <p class="font-bold">Admiction Date</p>
+                <input v-model="form.enrollmentDate" type="date" placeholder="Enrollment Date" class="px-4 py-2 border rounded-lg w-full" />
+              </div>
+              <div>
+                <p class="font-bold">Previous School</p>
+                <input v-model="form.previousSchool" placeholder="Previous School" class="px-4 py-2 border rounded-lg w-full" />
+              </div>
             </div>
           </div>
 
