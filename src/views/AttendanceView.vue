@@ -499,7 +499,7 @@ const periodAttendance = ref<Record<number, string>>({})
 // Monthly Report
 const reportClass = ref('')
 const reportMonth = ref(new Date().toISOString().substring(0, 7))
-const monthlyReport = ref<any[]>([])
+const monthlyReport = ref<unknown[]>([])
 
 // Graph
 const graphClass = ref('')
