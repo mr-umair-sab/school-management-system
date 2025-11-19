@@ -11,7 +11,7 @@
             :key="tab.id"
             @click="activeTab = tab.id"
             :class="activeTab === tab.id ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'"
-            class="px-4 py-2 font-semibold whitespace-nowrap"
+            class=" py-2 font-semibold whitespace-nowrap"
           >
             {{ tab.label }}
           </button>
