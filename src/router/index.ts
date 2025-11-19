@@ -65,6 +65,48 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/library',
+      name: 'library',
+      component: () => import('@/views/LibraryView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/timetable',
+      name: 'timetable',
+      component: () => import('@/views/TimetableView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/transport',
+      name: 'transport',
+      component: () => import('@/views/TransportView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/events',
+      name: 'events',
+      component: () => import('@/views/EventsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/reports',
+      name: 'reports',
+      component: () => import('@/views/ReportsView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
+      path: '/parent-portal',
+      name: 'parent-portal',
+      component: () => import('@/views/ParentPortalView.vue'),
+      meta: { requiresAuth: true, roles: ['parent'] }
+    },
+    {
+      path: '/student-portal',
+      name: 'student-portal',
+      component: () => import('@/views/StudentPortalView.vue'),
+      meta: { requiresAuth: true, roles: ['student'] }
     }
   ]
 })
