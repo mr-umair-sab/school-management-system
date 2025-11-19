@@ -20,7 +20,16 @@
 
       <!-- Daily Attendance -->
       <div v-if="activeTab === 'daily'" class="bg-white rounded-2xl shadow-lg p-6">
-        <h2 class="text-2xl font-bold mb-6">Daily Attendance</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Daily Attendance</h2>
+          <button
+            @click="quickMarkAttendance"
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold flex items-center gap-2 shadow-lg"
+          >
+            <span class="text-xl">➕</span>
+            <span>Mark Attendance</span>
+          </button>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <select v-model="selectedClass" class="px-4 py-2 border rounded-lg">
@@ -771,6 +780,24 @@ function getSubjectName(subjectId: number) {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function quickMarkAttendance() {
+  if (!selectedClass.value) {
+    alert('Please select a class first!')
+    return
+  }
+
+  // Scroll to the attendance table
+  const element = document.querySelector('.overflow-x-auto')
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Show a helpful message
+  setTimeout(() => {
+    alert('Mark attendance for each student using the buttons below. Click "Save Attendance" when done.')
+  }, 500)
 }
 </script>
 
