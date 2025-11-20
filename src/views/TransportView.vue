@@ -912,6 +912,349 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Route Modal -->
+    <div v-if="showAddRoute" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
+          <h3 class="text-2xl font-bold">🗺️ Create New Route</h3>
+          <button @click="showAddRoute = false" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Route Name</label>
+              <input v-model="newRoute.routeName" placeholder="e.g., North Route"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Route ID</label>
+              <input v-model="newRoute.routeId" placeholder="RT-001"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Start Point</label>
+              <input v-model="newRoute.startPoint" placeholder="School"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Destination</label>
+              <input v-model="newRoute.destination" placeholder="North Area"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Assign Bus</label>
+              <select v-model="newRoute.assignedBus" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Bus</option>
+                <option v-for="bus in buses" :key="bus.id" :value="bus.busNumber">{{ bus.busNumber }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Distance (km)</label>
+              <input type="number" v-model="newRoute.distance" placeholder="25"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Duration (minutes)</label>
+              <input type="number" v-model="newRoute.duration" placeholder="45"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Route Fee (₹)</label>
+              <input type="number" v-model="newRoute.routeFee" placeholder="1500"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Morning Time</label>
+              <input type="time" v-model="newRoute.morningTime"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Afternoon Time</label>
+              <input type="time" v-model="newRoute.afternoonTime"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button @click="saveRoute" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+              💾 Save Route
+            </button>
+            <button @click="showAddRoute = false" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Stop Modal -->
+    <div v-if="showAddStop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
+        <div class="p-6 border-b flex justify-between items-center">
+          <h3 class="text-2xl font-bold">📍 Add Stop Point</h3>
+          <button @click="showAddStop = false" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Stop Name</label>
+              <input v-model="newStop.name" placeholder="e.g., Main Square"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Route</label>
+              <select v-model="newStop.routeName" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Route</option>
+                <option v-for="route in routes" :key="route.id" :value="route.routeName">{{ route.routeName }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Morning ETA</label>
+              <input type="time" v-model="newStop.morningETA"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Evening ETA</label>
+              <input type="time" v-model="newStop.eveningETA"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Stop Fee (₹)</label>
+              <input type="number" v-model="newStop.fee" placeholder="1500"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Parent Contact</label>
+              <input v-model="newStop.parentContact" placeholder="0300-1234567"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold mb-2">GPS Coordinates (Optional)</label>
+              <input v-model="newStop.gpsCoordinates" placeholder="24.8607° N, 67.0011° E"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button @click="saveStop" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+              💾 Save Stop
+            </button>
+            <button @click="showAddStop = false" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Driver Modal -->
+    <div v-if="showAddDriver" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
+          <h3 class="text-2xl font-bold">👨‍✈️ Add New Driver</h3>
+          <button @click="showAddDriver = false" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Driver Name</label>
+              <input v-model="newDriver.name" placeholder="Ahmed Khan"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Driver ID</label>
+              <input v-model="newDriver.driverId" placeholder="DRV-001"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">CNIC</label>
+              <input v-model="newDriver.cnic" placeholder="42101-1234567-1"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">License Number</label>
+              <input v-model="newDriver.licenseNumber" placeholder="LIC123456"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">License Expiry</label>
+              <input type="date" v-model="newDriver.licenseExpiry"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Phone Number</label>
+              <input v-model="newDriver.phone" placeholder="0300-1234567"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Emergency Contact</label>
+              <input v-model="newDriver.emergencyContact" placeholder="0321-7654321"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Assign Bus</label>
+              <select v-model="newDriver.assignedBus" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Bus</option>
+                <option v-for="bus in buses" :key="bus.id" :value="bus.busNumber">{{ bus.busNumber }}</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold mb-2">Medical Conditions (Optional)</label>
+              <textarea v-model="newDriver.medicalConditions" placeholder="Any medical conditions..."
+                        class="w-full px-4 py-2 border rounded-lg" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button @click="saveDriver" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+              💾 Save Driver
+            </button>
+            <button @click="showAddDriver = false" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign Student Modal -->
+    <div v-if="showAssignStudent" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
+        <div class="p-6 border-b flex justify-between items-center">
+          <h3 class="text-2xl font-bold">🎫 Assign Student to Transport</h3>
+          <button @click="showAssignStudent = false" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Student Name</label>
+              <input v-model="newAssignment.studentName" placeholder="Search student"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Roll Number</label>
+              <input v-model="newAssignment.rollNumber" placeholder="STD001"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Class</label>
+              <input v-model="newAssignment.class" placeholder="Class 10"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Route</label>
+              <select v-model="newAssignment.routeName" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Route</option>
+                <option v-for="route in routes" :key="route.id" :value="route.routeName">{{ route.routeName }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Stop Point</label>
+              <select v-model="newAssignment.stopName" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Stop</option>
+                <option v-for="stop in allStops" :key="stop.id" :value="stop.name">{{ stop.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Shift</label>
+              <select v-model="newAssignment.shift" class="w-full px-4 py-2 border rounded-lg">
+                <option value="both">Both (Morning & Afternoon)</option>
+                <option value="morning">Morning Only</option>
+                <option value="afternoon">Afternoon Only</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Monthly Fee (₹)</label>
+              <input type="number" v-model="newAssignment.monthlyFee" placeholder="1500"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Transport ID</label>
+              <input v-model="newAssignment.transportId" placeholder="Auto-generated"
+                     class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button @click="saveAssignment" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+              💾 Assign Student
+            </button>
+            <button @click="showAssignStudent = false" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mark Attendance Modal -->
+    <div v-if="showMarkAttendance" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
+          <h3 class="text-2xl font-bold">✅ Mark Transport Attendance</h3>
+          <button @click="showMarkAttendance = false" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Select Route</label>
+              <select v-model="attendanceMarkRoute" class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Route</option>
+                <option v-for="route in routes" :key="route.id" :value="route.id">{{ route.routeName }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Shift</label>
+              <select v-model="attendanceMarkShift" class="w-full px-4 py-2 border rounded-lg">
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Date</label>
+              <input type="date" v-model="attendanceMarkDate"
+                     class="w-full px-4 py-2 border rounded-lg" />
+            </div>
+          </div>
+          <div class="border rounded-lg overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="border p-3 text-left">Student</th>
+                  <th class="border p-3 text-center">Boarding Time</th>
+                  <th class="border p-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="student in studentAssignments.slice(0, 5)" :key="student.id" class="hover:bg-gray-50">
+                  <td class="border p-3">
+                    <div>
+                      <p class="font-semibold">{{ student.studentName }}</p>
+                      <p class="text-sm text-gray-600">{{ student.rollNumber }}</p>
+                    </div>
+                  </td>
+                  <td class="border p-3 text-center">
+                    <input type="time" class="px-2 py-1 border rounded" />
+                  </td>
+                  <td class="border p-3 text-center">
+                    <select class="px-2 py-1 border rounded">
+                      <option value="present">Present</option>
+                      <option value="absent">Absent</option>
+                      <option value="leave">On Leave</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button @click="saveAttendance" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+              💾 Save Attendance
+            </button>
+            <button @click="showMarkAttendance = false" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1033,6 +1376,23 @@ const routes = ref([
 ])
 
 const showAddRoute = ref(false)
+const newRoute = ref({
+  routeName: '',
+  routeId: '',
+  startPoint: '',
+  destination: '',
+  assignedBus: '',
+  distance: 0,
+  duration: 0,
+  routeFee: 0,
+  morningTime: '',
+  afternoonTime: ''
+})
+
+const saveRoute = () => {
+  console.log('Saving route:', newRoute.value)
+  showAddRoute.value = false
+}
 
 const editRoute = (route: Record<string, unknown>) => {
   console.log('Editing route:', route)
@@ -1049,6 +1409,20 @@ const allStops = ref([
 ])
 
 const showAddStop = ref(false)
+const newStop = ref({
+  name: '',
+  routeName: '',
+  morningETA: '',
+  eveningETA: '',
+  fee: 0,
+  parentContact: '',
+  gpsCoordinates: ''
+})
+
+const saveStop = () => {
+  console.log('Saving stop:', newStop.value)
+  showAddStop.value = false
+}
 
 const editStop = (stop: Record<string, unknown>) => {
   console.log('Editing stop:', stop)
@@ -1061,6 +1435,22 @@ const drivers = ref([
 ])
 
 const showAddDriver = ref(false)
+const newDriver = ref({
+  name: '',
+  driverId: '',
+  cnic: '',
+  licenseNumber: '',
+  licenseExpiry: '',
+  phone: '',
+  emergencyContact: '',
+  assignedBus: '',
+  medicalConditions: ''
+})
+
+const saveDriver = () => {
+  console.log('Saving driver:', newDriver.value)
+  showAddDriver.value = false
+}
 
 const viewDriverHistory = (driver: Record<string, unknown>) => {
   console.log('Viewing driver history:', driver)
@@ -1079,6 +1469,21 @@ const assignmentSearch = ref('')
 const assignmentRouteFilter = ref('')
 const assignmentShiftFilter = ref('')
 const showAssignStudent = ref(false)
+const newAssignment = ref({
+  studentName: '',
+  rollNumber: '',
+  class: '',
+  routeName: '',
+  stopName: '',
+  shift: 'both',
+  monthlyFee: 0,
+  transportId: 'TRP-' + Date.now()
+})
+
+const saveAssignment = () => {
+  console.log('Saving assignment:', newAssignment.value)
+  showAssignStudent.value = false
+}
 
 const studentAssignments = ref([
   { id: 1, studentName: 'Ali Ahmed', rollNumber: 'STD001', class: 'Class 10', busNumber: 'ABC-123', routeName: 'North Route', stopName: 'Stop A', shift: 'both', monthlyFee: 1500, transportId: 'TRP-001' },
@@ -1111,6 +1516,14 @@ const attendanceRouteFilter = ref('')
 const attendanceShiftFilter = ref('')
 const attendanceStatusFilter = ref('')
 const showMarkAttendance = ref(false)
+const attendanceMarkRoute = ref('')
+const attendanceMarkShift = ref('morning')
+const attendanceMarkDate = ref(new Date().toISOString().split('T')[0])
+
+const saveAttendance = () => {
+  console.log('Saving attendance')
+  showMarkAttendance.value = false
+}
 const presentCount = ref(380)
 const absentCount = ref(45)
 const leaveCount = ref(25)
