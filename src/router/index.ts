@@ -85,6 +85,12 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['admin'] }
     },
     {
+      path: '/subject-management',
+      name: 'subject-management',
+      component: () => import('@/views/SubjectManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
       path: '/transport',
       name: 'transport',
       component: () => import('@/views/TransportView.vue'),

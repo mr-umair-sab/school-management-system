@@ -33,6 +33,7 @@ const allMenuItems = [
   { path: '/students', label: 'Students', icon: '👨‍🎓', roles: ['admin', 'teacher'] },
   { path: '/teachers', label: 'Teachers', icon: '👨‍🏫', roles: ['admin'] },
   { path: '/subjects', label: 'Subjects', icon: '📚', roles: ['admin', 'teacher'] },
+  { path: '/subject-management', label: 'Subject Management', icon: '📖', roles: ['admin', 'teacher'] },
   { path: '/timetable', label: 'Timetable', icon: '📅', roles: ['admin', 'teacher'] },
   { path: '/class-management', label: 'Class Management', icon: '🏫', roles: ['admin'] },
   { path: '/attendance', label: 'Attendance', icon: '✅', roles: ['admin', 'teacher'] },
