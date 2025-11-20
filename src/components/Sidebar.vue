@@ -34,6 +34,7 @@ const allMenuItems = [
   { path: '/teachers', label: 'Teachers', icon: '👨‍🏫', roles: ['admin'] },
   { path: '/subjects', label: 'Subjects', icon: '📚', roles: ['admin', 'teacher'] },
   { path: '/timetable', label: 'Timetable', icon: '📅', roles: ['admin', 'teacher'] },
+  { path: '/class-management', label: 'Class Management', icon: '🏫', roles: ['admin'] },
   { path: '/attendance', label: 'Attendance', icon: '✅', roles: ['admin', 'teacher'] },
   { path: '/fees', label: 'Fee Management', icon: '💰', roles: ['admin'] },
   { path: '/exams', label: 'Exams & Results', icon: '📝', roles: ['admin', 'teacher'] },

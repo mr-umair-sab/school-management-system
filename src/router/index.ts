@@ -79,6 +79,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/class-management',
+      name: 'class-management',
+      component: () => import('@/views/ClassManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin'] }
+    },
+    {
       path: '/transport',
       name: 'transport',
       component: () => import('@/views/TransportView.vue'),
