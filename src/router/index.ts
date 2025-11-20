@@ -91,6 +91,12 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
     },
     {
+      path: '/exam-management',
+      name: 'exam-management',
+      component: () => import('@/views/ExamManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
       path: '/transport',
       name: 'transport',
       component: () => import('@/views/TransportView.vue'),
