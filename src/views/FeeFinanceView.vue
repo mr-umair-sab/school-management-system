@@ -35,7 +35,7 @@
             </div>
             <span class="text-sm opacity-80">This Month</span>
           </div>
-          <h3 class="text-3xl font-bold">₹{{ totalCollected.toLocaleString() }}</h3>
+          <h3 class="text-3xl font-bold">RS:{{ totalCollected.toLocaleString() }}</h3>
           <p class="text-sm opacity-80">Total Collected</p>
         </div>
 
@@ -46,7 +46,7 @@
             </div>
             <span class="text-sm opacity-80">Outstanding</span>
           </div>
-          <h3 class="text-3xl font-bold">₹{{ totalPending.toLocaleString() }}</h3>
+          <h3 class="text-3xl font-bold">RS:{{ totalPending.toLocaleString() }}</h3>
           <p class="text-sm opacity-80">Pending Amount</p>
         </div>
 
@@ -68,7 +68,7 @@
             </div>
             <span class="text-sm opacity-80">Discounts</span>
           </div>
-          <h3 class="text-3xl font-bold">₹{{ totalDiscounts.toLocaleString() }}</h3>
+          <h3 class="text-3xl font-bold">RS:{{ totalDiscounts.toLocaleString() }}</h3>
           <p class="text-sm opacity-80">Total Given</p>
         </div>
       </div>
@@ -117,13 +117,13 @@
               <div v-for="component in structure.components" :key="component.name"
                    class="p-3 bg-gray-50 rounded">
                 <p class="text-sm font-semibold">{{ component.name }}</p>
-                <p class="text-lg font-bold text-green-600">₹{{ component.amount }}</p>
+                <p class="text-lg font-bold text-green-600">RS:{{ component.amount }}</p>
                 <p class="text-xs text-gray-500">{{ component.type }}</p>
               </div>
             </div>
             <div class="mt-4 p-3 bg-indigo-50 rounded flex justify-between items-center">
               <span class="font-semibold">Total Amount:</span>
-              <span class="text-2xl font-bold text-indigo-600">₹{{ structure.totalAmount }}</span>
+              <span class="text-2xl font-bold text-indigo-600">RS:{{ structure.totalAmount }}</span>
             </div>
           </div>
         </div>
@@ -186,7 +186,7 @@
                 </td>
                 <td class="border p-3">{{ voucher.class }}</td>
                 <td class="border p-3 text-center">
-                  <span class="font-bold text-green-600">₹{{ voucher.amount }}</span>
+                  <span class="font-bold text-green-600">RS:{{ voucher.amount }}</span>
                 </td>
                 <td class="border p-3 text-center">{{ voucher.dueDate }}</td>
                 <td class="border p-3 text-center">
@@ -268,28 +268,28 @@
               <div v-if="selectedStudentForPayment" class="space-y-2 text-sm">
                 <div class="flex justify-between">
                   <span>Monthly Fee:</span>
-                  <span class="font-semibold">₹{{ selectedStudentForPayment.monthlyFee }}</span>
+                  <span class="font-semibold">RS:{{ selectedStudentForPayment.monthlyFee }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Transport Fee:</span>
-                  <span class="font-semibold">₹{{ selectedStudentForPayment.transportFee }}</span>
+                  <span class="font-semibold">RS:{{ selectedStudentForPayment.transportFee }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Late Fee:</span>
-                  <span class="font-semibold text-red-600">₹{{ selectedStudentForPayment.lateFee }}</span>
+                  <span class="font-semibold text-red-600">RS:{{ selectedStudentForPayment.lateFee }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Discount:</span>
-                  <span class="font-semibold text-green-600">-₹{{ selectedStudentForPayment.discount }}</span>
+                  <span class="font-semibold text-green-600">-RS:{{ selectedStudentForPayment.discount }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Previous Dues:</span>
-                  <span class="font-semibold text-red-600">₹{{ selectedStudentForPayment.previousDues }}</span>
+                  <span class="font-semibold text-red-600">RS:{{ selectedStudentForPayment.previousDues }}</span>
                 </div>
                 <hr class="my-2" />
                 <div class="flex justify-between text-lg font-bold">
                   <span>Total:</span>
-                  <span>₹{{ calculateTotal() }}</span>
+                  <span>RS:{{ calculateTotal() }}</span>
                 </div>
               </div>
               <div v-else class="text-center text-gray-500 py-8">
@@ -308,19 +308,19 @@
           <h3 class="text-xl font-bold mb-4">📊 Today's Collection Summary</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="p-4 bg-green-50 rounded-lg text-center">
-              <p class="text-2xl font-bold text-green-600">₹{{ todayCollection.cash.toLocaleString() }}</p>
+              <p class="text-2xl font-bold text-green-600">RS:{{ todayCollection.cash.toLocaleString() }}</p>
               <p class="text-sm text-gray-600">Cash Collection</p>
             </div>
             <div class="p-4 bg-blue-50 rounded-lg text-center">
-              <p class="text-2xl font-bold text-blue-600">₹{{ todayCollection.bank.toLocaleString() }}</p>
+              <p class="text-2xl font-bold text-blue-600">RS:{{ todayCollection.bank.toLocaleString() }}</p>
               <p class="text-sm text-gray-600">Bank Transfer</p>
             </div>
             <div class="p-4 bg-purple-50 rounded-lg text-center">
-              <p class="text-2xl font-bold text-purple-600">₹{{ todayCollection.online.toLocaleString() }}</p>
+              <p class="text-2xl font-bold text-purple-600">RS:S:{{ todayCollection.online.toLocaleString() }}</p>
               <p class="text-sm text-gray-600">Online Payment</p>
             </div>
             <div class="p-4 bg-indigo-50 rounded-lg text-center">
-              <p class="text-2xl font-bold text-indigo-600">₹{{ todayCollection.total.toLocaleString() }}</p>
+              <p class="text-2xl font-bold text-indigo-600">RS:{{ todayCollection.total.toLocaleString() }}</p>
               <p class="text-sm text-gray-600">Total Collection</p>
             </div>
           </div>
@@ -375,7 +375,7 @@
                 <td class="border p-3">{{ discount.class }}</td>
                 <td class="border p-3">{{ discount.type }}</td>
                 <td class="border p-3 text-center">{{ discount.percentage }}%</td>
-                <td class="border p-3 text-center">₹{{ discount.amount }}</td>
+                <td class="border p-3 text-center">RS:{{ discount.amount }}</td>
                 <td class="border p-3 text-center">
                   <span :class="getDiscountStatusBadge(discount.status)" class="px-2 py-1 rounded-full text-xs">
                     {{ discount.status }}
@@ -406,17 +406,17 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div class="p-4 bg-red-50 rounded-lg">
             <h3 class="font-bold text-red-700 mb-2">Late Fee</h3>
-            <p class="text-3xl font-bold text-red-600">₹{{ totalLateFee.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-red-600">RS:{{ totalLateFee.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-yellow-50 rounded-lg">
             <h3 class="font-bold text-yellow-700 mb-2">Library Fines</h3>
-            <p class="text-3xl font-bold text-yellow-600">₹{{ totalLibraryFine.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-yellow-600">RS:{{ totalLibraryFine.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">Outstanding</p>
           </div>
           <div class="p-4 bg-orange-50 rounded-lg">
             <h3 class="font-bold text-orange-700 mb-2">Other Fines</h3>
-            <p class="text-3xl font-bold text-orange-600">₹{{ totalOtherFines.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-orange-600">RS:{{ totalOtherFines.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">Total</p>
           </div>
         </div>
@@ -445,7 +445,7 @@
                 <td class="border p-3">{{ fine.class }}</td>
                 <td class="border p-3">{{ fine.type }}</td>
                 <td class="border p-3 text-center">
-                  <span class="font-bold text-red-600">₹{{ fine.amount }}</span>
+                  <span class="font-bold text-red-600">RS:S:{{ fine.amount }}</span>
                 </td>
                 <td class="border p-3">{{ fine.reason }}</td>
                 <td class="border p-3 text-center">{{ fine.date }}</td>
@@ -509,7 +509,7 @@
                 <p class="text-sm text-gray-600">Parent: {{ student.parentPhone }}</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-red-600">₹{{ student.dueAmount }}</p>
+                <p class="text-lg font-bold text-red-600">RS:S:{{ student.dueAmount }}</p>
                 <p class="text-sm text-gray-600">{{ student.daysOverdue }} days overdue</p>
               </div>
             </div>
@@ -544,22 +544,22 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div class="p-4 bg-green-50 rounded-lg">
             <h3 class="font-bold text-green-700 mb-2">Total Income</h3>
-            <p class="text-2xl font-bold text-green-600">₹{{ totalIncome.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-green-600">RS:S:S:S:S:S:{{ totalIncome.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-red-50 rounded-lg">
             <h3 class="font-bold text-red-700 mb-2">Total Expense</h3>
-            <p class="text-2xl font-bold text-red-600">₹{{ totalExpense.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-red-600">RS:{{ totalExpense.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-blue-50 rounded-lg">
             <h3 class="font-bold text-blue-700 mb-2">Net Balance</h3>
-            <p class="text-2xl font-bold text-blue-600">₹{{ (totalIncome - totalExpense).toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-blue-600">RS:{{ (totalIncome - totalExpense).toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-purple-50 rounded-lg">
             <h3 class="font-bold text-purple-700 mb-2">Bank Balance</h3>
-            <p class="text-2xl font-bold text-purple-600">₹{{ bankBalance.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-purple-600">RS:S:S:{{ bankBalance.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">Current</p>
           </div>
         </div>
@@ -588,12 +588,12 @@
                 <td class="border p-3">{{ entry.category }}</td>
                 <td class="border p-3">{{ entry.description }}</td>
                 <td class="border p-3 text-center">
-                  <span v-if="entry.type === 'income'" class="font-bold text-green-600">₹{{ entry.amount }}</span>
+                  <span v-if="entry.type === 'income'" class="font-bold text-green-600">RS:S:S:{{ entry.amount }}</span>
                 </td>
                 <td class="border p-3 text-center">
-                  <span v-if="entry.type === 'expense'" class="font-bold text-red-600">₹{{ entry.amount }}</span>
+                  <span v-if="entry.type === 'expense'" class="font-bold text-red-600">RS:S:{{ entry.amount }}</span>
                 </td>
-                <td class="border p-3 text-center font-bold">₹{{ entry.balance }}</td>
+                <td class="border p-3 text-center font-bold">RS:{{ entry.balance }}</td>
                 <td class="border p-3 text-center">
                   <button @click="viewReceipt(entry)" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs mr-1">
                     👁️
@@ -629,17 +629,17 @@
           </div>
           <div class="p-4 bg-green-50 rounded-lg">
             <h3 class="font-bold text-green-700 mb-2">Total Salary</h3>
-            <p class="text-2xl font-bold text-green-600">₹{{ totalSalary.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-green-600">RS:S:{{ totalSalary.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-yellow-50 rounded-lg">
             <h3 class="font-bold text-yellow-700 mb-2">Paid</h3>
-            <p class="text-2xl font-bold text-yellow-600">₹{{ paidSalary.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-yellow-600">RS:{{ paidSalary.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">{{ paidStaffCount }} Staff</p>
           </div>
           <div class="p-4 bg-red-50 rounded-lg">
             <h3 class="font-bold text-red-700 mb-2">Pending</h3>
-            <p class="text-2xl font-bold text-red-600">₹{{ pendingSalary.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-red-600">RS:S:S:S:{{ pendingSalary.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">{{ pendingStaffCount }} Staff</p>
           </div>
         </div>
@@ -666,11 +666,11 @@
                   </div>
                 </td>
                 <td class="border p-3">{{ staff.designation }}</td>
-                <td class="border p-3 text-center">₹{{ staff.basicPay }}</td>
-                <td class="border p-3 text-center text-green-600">+₹{{ staff.allowances }}</td>
-                <td class="border p-3 text-center text-red-600">-₹{{ staff.deductions }}</td>
+                <td class="border p-3 text-center">RS:S:{{ staff.basicPay }}</td>
+                <td class="border p-3 text-center text-green-600">+RS:{{ staff.allowances }}</td>
+                <td class="border p-3 text-center text-red-600">-RS:{{ staff.deductions }}</td>
                 <td class="border p-3 text-center">
-                  <span class="font-bold text-blue-600">₹{{ staff.netSalary }}</span>
+                  <span class="font-bold text-blue-600">RS:{{ staff.netSalary }}</span>
                 </td>
                 <td class="border p-3 text-center">
                   <span :class="getSalaryStatusBadge(staff.status)" class="px-2 py-1 rounded-full text-xs">
@@ -731,11 +731,11 @@
                 <div class="flex-1 flex gap-1">
                   <div class="bg-green-500 h-8 rounded flex items-center justify-center text-white text-xs font-bold"
                        :style="`width: ${month.collectedPercent}%`">
-                    ₹{{ month.collected }}k
+                    RS:{{ month.collected }}k
                   </div>
                   <div class="bg-red-500 h-8 rounded flex items-center justify-center text-white text-xs font-bold"
                        :style="`width: ${month.pendingPercent}%`">
-                    ₹{{ month.pending }}k
+                    RS:{{ month.pending }}k
                   </div>
                 </div>
                 <span class="text-sm font-bold w-16">{{ month.percentage }}%</span>
@@ -761,8 +761,8 @@
                   <tr v-for="cls in classWiseCollection" :key="cls.class" class="hover:bg-gray-50">
                     <td class="border p-2 font-semibold">{{ cls.class }}</td>
                     <td class="border p-2 text-center">{{ cls.students }}</td>
-                    <td class="border p-2 text-center text-green-600 font-bold">₹{{ cls.collected }}</td>
-                    <td class="border p-2 text-center text-red-600 font-bold">₹{{ cls.pending }}</td>
+                    <td class="border p-2 text-center text-green-600 font-bold">RS:{{ cls.collected }}</td>
+                    <td class="border p-2 text-center text-red-600 font-bold">RS:{{ cls.pending }}</td>
                     <td class="border p-2 text-center">
                       <span :class="getCollectionPercentageColor(cls.percentage)" class="font-bold">
                         {{ cls.percentage }}%

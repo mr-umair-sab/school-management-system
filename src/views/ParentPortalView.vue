@@ -31,7 +31,7 @@
           <DashboardCard title="Fee Status" :value="getFeeStatus(selectedStudent.id)" color="blue">
             <template #icon><span class="text-3xl">💰</span></template>
           </DashboardCard>
-          <DashboardCard title="Pending Amount" :value="`₹${getPendingFees(selectedStudent.id)}`" color="yellow">
+          <DashboardCard title="Pending Amount" :value="`RS:${getPendingFees(selectedStudent.id)}`" color="yellow">
             <template #icon><span class="text-3xl">⏳</span></template>
           </DashboardCard>
         </div>

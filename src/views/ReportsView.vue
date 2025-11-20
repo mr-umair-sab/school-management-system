@@ -10,10 +10,10 @@
         <DashboardCard title="Total Teachers" :value="teachersStore.activeTeachers.length" color="green">
           <template #icon><span class="text-3xl">👨‍🏫</span></template>
         </DashboardCard>
-        <DashboardCard title="Fee Collection" :value="`₹${feesStore.totalCollected.toLocaleString()}`" color="purple">
+        <DashboardCard title="Fee Collection" :value="`RS:${feesStore.totalCollected.toLocaleString()}`" color="purple">
           <template #icon><span class="text-3xl">💰</span></template>
         </DashboardCard>
-        <DashboardCard title="Pending Fees" :value="`₹${feesStore.totalPending.toLocaleString()}`" color="yellow">
+        <DashboardCard title="Pending Fees" :value="`RS:${feesStore.totalPending.toLocaleString()}`" color="yellow">
           <template #icon><span class="text-3xl">⏳</span></template>
         </DashboardCard>
       </div>
@@ -38,7 +38,7 @@
             <div>
               <div class="flex justify-between mb-2">
                 <span>Collected</span>
-                <span class="font-bold">₹{{ feesStore.totalCollected.toLocaleString() }}</span>
+                <span class="font-bold">RS:{{ feesStore.totalCollected.toLocaleString() }}</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-green-500 h-3 rounded-full" :style="`width: ${collectionPercentage}%`"></div>
@@ -47,7 +47,7 @@
             <div>
               <div class="flex justify-between mb-2">
                 <span>Pending</span>
-                <span class="font-bold">₹{{ feesStore.totalPending.toLocaleString() }}</span>
+                <span class="font-bold">RS:{{ feesStore.totalPending.toLocaleString() }}</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-yellow-500 h-3 rounded-full" :style="`width: ${pendingPercentage}%`"></div>
@@ -56,7 +56,7 @@
             <div class="pt-2 border-t">
               <div class="flex justify-between">
                 <span class="font-bold">Total Expected</span>
-                <span class="font-bold">₹{{ totalExpected.toLocaleString() }}</span>
+                <span class="font-bold">RS:{{ totalExpected.toLocaleString() }}</span>
               </div>
             </div>
           </div>

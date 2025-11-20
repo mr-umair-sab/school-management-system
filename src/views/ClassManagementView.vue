@@ -379,17 +379,17 @@
               <div>
                 <label class="block text-sm font-semibold mb-2">Monthly Tuition Fee</label>
                 <input type="number" v-model="cls.monthlyFee"
-                       class="w-full px-4 py-2 border rounded-lg" placeholder="₹" />
+                       class="w-full px-4 py-2 border rounded-lg" placeholder="RS:" />
               </div>
               <div>
                 <label class="block text-sm font-semibold mb-2">Annual Fee</label>
                 <input type="number" v-model="cls.annualFee"
-                       class="w-full px-4 py-2 border rounded-lg" placeholder="₹" />
+                       class="w-full px-4 py-2 border rounded-lg" placeholder="RS:" />
               </div>
               <div>
                 <label class="block text-sm font-semibold mb-2">Admission Fee</label>
                 <input type="number" v-model="cls.admissionFee"
-                       class="w-full px-4 py-2 border rounded-lg" placeholder="₹" />
+                       class="w-full px-4 py-2 border rounded-lg" placeholder="RS:" />
               </div>
             </div>
 

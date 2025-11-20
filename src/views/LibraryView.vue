@@ -93,7 +93,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3">
-                  {{ issue.fine ? `₹${issue.fine}` : '-' }}
+                  {{ issue.fine ? `RS:${issue.fine}` : '-' }}
                 </td>
                 <td class="px-4 py-3">
                   <button

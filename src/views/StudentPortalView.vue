@@ -20,7 +20,7 @@
         <DashboardCard title="Attendance" :value="`${attendancePercentage}%`" color="green">
           <template #icon><span class="text-3xl">✅</span></template>
         </DashboardCard>
-        <DashboardCard title="Pending Fees" :value="`₹${pendingFees}`" color="yellow">
+        <DashboardCard title="Pending Fees" :value="`RS:${pendingFees}`" color="yellow">
           <template #icon><span class="text-3xl">💰</span></template>
         </DashboardCard>
         <DashboardCard title="Books Issued" :value="booksIssued" color="blue">
@@ -90,7 +90,7 @@
                 <td class="px-4 py-3">
                   <span :class="getStatusClass(issue.status)">{{ issue.status }}</span>
                 </td>
-                <td class="px-4 py-3">{{ issue.fine ? `₹${issue.fine}` : '-' }}</td>
+                <td class="px-4 py-3">{{ issue.fine ? `RS:${issue.fine}` : '-' }}</td>
               </tr>
             </tbody>
           </table>
