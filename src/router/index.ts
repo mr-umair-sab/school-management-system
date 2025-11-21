@@ -154,7 +154,23 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
-    next('/')
+    // Redirect based on role after login
+    if (authStore.userRole === 'parent') {
+      next('/parent-portal')
+    } else if (authStore.userRole === 'student') {
+      next('/student-portal')
+    } else {
+      next('/')
+    }
+  } else if (to.path === '/' && authStore.isAuthenticated) {
+    // Redirect to appropriate portal from dashboard
+    if (authStore.userRole === 'parent') {
+      next('/parent-portal')
+    } else if (authStore.userRole === 'student') {
+      next('/student-portal')
+    } else {
+      next()
+    }
   } else {
     next()
   }

@@ -32,9 +32,10 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
           <select v-model="role" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-            <option value="admin">Admin</option>
-            <option value="teacher">Teacher</option>
-            <option value="student">Student</option>
+            <option value="admin">👨‍💼 Admin</option>
+            <option value="teacher">👨‍🏫 Teacher</option>
+            <option value="parent">👨‍👩‍👧 Parent</option>
+            <option value="student">👨‍🎓 Student</option>
           </select>
         </div>
 
@@ -46,9 +47,13 @@
         </button>
       </form>
 
-      <p class="text-center text-sm text-gray-600 mt-6">
-        Demo: admin@school.com / password
-      </p>
+      <!-- <div class="text-center text-sm text-gray-600 mt-6 space-y-1">
+        <p class="font-semibold">Demo Credentials:</p>
+        <p>👨‍💼 Admin: admin@school.com / password</p>
+        <p>👨‍🏫 Teacher: teacher@school.com / password</p>
+        <p>👨‍👩‍👧 Parent: parent@school.com / password</p>
+        <p>👨‍🎓 Student: student@school.com / password</p>
+      </div> -->
     </div>
   </div>
 </template>
@@ -63,10 +68,18 @@ const authStore = useAuthStore()
 
 const email = ref('admin@school.com')
 const password = ref('password')
-const role = ref('admin')
+const role = ref<'admin' | 'teacher' | 'parent' | 'student'>('admin')
 
 function handleLogin() {
   authStore.login({ name: 'Admin User', email: email.value }, role.value)
-  router.push('/')
+
+  // Redirect based on role
+  if (role.value === 'parent') {
+    router.push('/parent-portal')
+  } else if (role.value === 'student') {
+    router.push('/student-portal')
+  } else {
+    router.push('/')
+  }
 }
 </script>
