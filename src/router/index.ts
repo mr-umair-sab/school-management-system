@@ -131,6 +131,12 @@ const router = createRouter({
       name: 'student-portal',
       component: () => import('@/views/StudentPortalView.vue'),
       meta: { requiresAuth: true, roles: ['student'] }
+    },
+    {
+      path: '/hostel',
+      name: 'hostel',
+      component: () => import('@/views/HostelView.vue'),
+      meta: { requiresAuth: true, roles: ['admin'] }
     }
   ]
 })
