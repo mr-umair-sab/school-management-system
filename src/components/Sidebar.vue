@@ -44,6 +44,7 @@ const allMenuItems = [
   { path: '/library', label: 'Library', icon: '📚', roles: ['admin', 'teacher'] },
   { path: '/transport', label: 'Transport', icon: '🚌', roles: ['admin'] },
   { path: '/hostel', label: 'Hostel Management', icon: '🏢', roles: ['admin'] },
+  { path: '/communication', label: 'Communication', icon: '💬', roles: ['admin', 'teacher'] },
   { path: '/events', label: 'Events', icon: '🎉', roles: ['admin', 'teacher'] },
   { path: '/notices', label: 'Notices', icon: '📢', roles: ['admin', 'teacher'] },
   { path: '/reports', label: 'Reports', icon: '📊', roles: ['admin', 'teacher'] },

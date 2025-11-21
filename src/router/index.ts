@@ -137,6 +137,12 @@ const router = createRouter({
       name: 'hostel',
       component: () => import('@/views/HostelView.vue'),
       meta: { requiresAuth: true, roles: ['admin'] }
+    },
+    {
+      path: '/communication',
+      name: 'communication',
+      component: () => import('@/views/CommunicationView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
     }
   ]
 })
