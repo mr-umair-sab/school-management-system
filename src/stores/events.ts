@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type {
     Event,
     Competition,
@@ -9,6 +9,8 @@ import type {
     Certificate,
     EventBudget
 } from '@/types'
+import * as eventsFirebase from '@/services/eventsFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useEventsStore = defineStore('events', () => {
     // State
@@ -22,6 +24,15 @@ export const useEventsStore = defineStore('events', () => {
 
     const loading = ref(false)
     const error = ref<string | null>(null)
+
+    // Unsubscribers
+    let eventsUnsub: Unsubscribe | null = null
+    let competitionsUnsub: Unsubscribe | null = null
+    let tripsUnsub: Unsubscribe | null = null
+    let ptmUnsub: Unsubscribe | null = null
+    let galleryUnsub: Unsubscribe | null = null
+    let certificatesUnsub: Unsubscribe | null = null
+    let budgetsUnsub: Unsubscribe | null = null
 
     // Computed Properties
     const totalEvents = computed(() => events.value.length)
@@ -44,181 +55,146 @@ export const useEventsStore = defineStore('events', () => {
         return events.value.filter(e => e.date === today)
     })
 
-    // LocalStorage helpers
-    function saveToLocalStorage() {
-        localStorage.setItem('events', JSON.stringify(events.value))
-        localStorage.setItem('competitions', JSON.stringify(competitions.value))
-        localStorage.setItem('trips', JSON.stringify(trips.value))
-        localStorage.setItem('ptmSchedules', JSON.stringify(ptmSchedules.value))
-        localStorage.setItem('galleryMedia', JSON.stringify(galleryMedia.value))
-        localStorage.setItem('certificates', JSON.stringify(certificates.value))
-        localStorage.setItem('budgets', JSON.stringify(budgets.value))
-    }
-
-    function loadFromLocalStorage() {
-        const storedEvents = localStorage.getItem('events')
-        const storedCompetitions = localStorage.getItem('competitions')
-        const storedTrips = localStorage.getItem('trips')
-        const storedPTMs = localStorage.getItem('ptmSchedules')
-        const storedGallery = localStorage.getItem('galleryMedia')
-        const storedCertificates = localStorage.getItem('certificates')
-        const storedBudgets = localStorage.getItem('budgets')
-
-        if (storedEvents) events.value = JSON.parse(storedEvents)
-        if (storedCompetitions) competitions.value = JSON.parse(storedCompetitions)
-        if (storedTrips) trips.value = JSON.parse(storedTrips)
-        if (storedPTMs) ptmSchedules.value = JSON.parse(storedPTMs)
-        if (storedGallery) galleryMedia.value = JSON.parse(storedGallery)
-        if (storedCertificates) certificates.value = JSON.parse(storedCertificates)
-        if (storedBudgets) budgets.value = JSON.parse(storedBudgets)
-    }
-
-    // Watch for changes and save to localStorage
-    watch([events, competitions, trips, ptmSchedules, galleryMedia, certificates, budgets], () => {
-        saveToLocalStorage()
-    }, { deep: true })
-
     // Actions
     async function initialize() {
-        loadFromLocalStorage()
+        try {
+            loading.value = true
+
+            eventsUnsub = eventsFirebase.subscribeToEvents((data) => events.value = data)
+            competitionsUnsub = eventsFirebase.subscribeToCompetitions((data) => competitions.value = data)
+            tripsUnsub = eventsFirebase.subscribeToTrips((data) => trips.value = data)
+            ptmUnsub = eventsFirebase.subscribeToPTMs((data) => ptmSchedules.value = data)
+            galleryUnsub = eventsFirebase.subscribeToGalleryMedia((data) => galleryMedia.value = data)
+            certificatesUnsub = eventsFirebase.subscribeToCertificates((data) => certificates.value = data)
+            budgetsUnsub = eventsFirebase.subscribeToBudgets((data) => budgets.value = data)
+
+            loading.value = false
+        } catch (err: any) {
+            error.value = err.message
+            loading.value = false
+            console.error('Failed to initialize events store:', err)
+        }
     }
 
     // Event Actions
     async function addEvent(event: Omit<Event, 'id'>) {
-        const newEvent = {
-            ...event,
-            id: Date.now().toString()
+        try {
+            loading.value = true
+            await eventsFirebase.createEvent(event)
+            loading.value = false
+        } catch (err: any) {
+            error.value = err.message
+            loading.value = false
+            throw err
         }
-        events.value.push(newEvent as Event)
     }
 
     async function updateEvent(id: string, data: Partial<Event>) {
-        const index = events.value.findIndex(e => e.id.toString() === id)
-        if (index !== -1) {
-            events.value[index] = { ...events.value[index], ...data }
+        try {
+            loading.value = true
+            await eventsFirebase.updateEvent(id, data)
+            loading.value = false
+        } catch (err: any) {
+            error.value = err.message
+            loading.value = false
+            throw err
         }
     }
 
     async function deleteEvent(id: string) {
-        events.value = events.value.filter(e => e.id.toString() !== id)
+        try {
+            loading.value = true
+            await eventsFirebase.deleteEvent(id)
+            loading.value = false
+        } catch (err: any) {
+            error.value = err.message
+            loading.value = false
+            throw err
+        }
     }
 
     // Competition Actions
     async function addCompetition(competition: Omit<Competition, 'id'>) {
-        const newCompetition = {
-            ...competition,
-            id: Date.now().toString()
-        }
-        competitions.value.push(newCompetition as Competition)
+        await eventsFirebase.createCompetition(competition)
     }
 
     async function updateCompetition(id: string, data: Partial<Competition>) {
-        const index = competitions.value.findIndex(c => c.id.toString() === id)
-        if (index !== -1) {
-            competitions.value[index] = { ...competitions.value[index], ...data }
-        }
+        await eventsFirebase.updateCompetition(id, data)
     }
 
     async function deleteCompetition(id: string) {
-        competitions.value = competitions.value.filter(c => c.id.toString() !== id)
+        await eventsFirebase.deleteCompetition(id)
     }
 
     // Trip Actions
     async function addTrip(trip: Omit<Trip, 'id'>) {
-        const newTrip = {
-            ...trip,
-            id: Date.now().toString()
-        }
-        trips.value.push(newTrip as Trip)
+        await eventsFirebase.createTrip(trip)
     }
 
     async function updateTrip(id: string, data: Partial<Trip>) {
-        const index = trips.value.findIndex(t => t.id.toString() === id)
-        if (index !== -1) {
-            trips.value[index] = { ...trips.value[index], ...data }
-        }
+        await eventsFirebase.updateTrip(id, data)
     }
 
     async function deleteTrip(id: string) {
-        trips.value = trips.value.filter(t => t.id.toString() !== id)
+        await eventsFirebase.deleteTrip(id)
     }
 
     // PTM Actions
     async function addPTM(ptm: Omit<PTMSchedule, 'id'>) {
-        const newPTM = {
-            ...ptm,
-            id: Date.now().toString()
-        }
-        ptmSchedules.value.push(newPTM as PTMSchedule)
+        await eventsFirebase.createPTM(ptm)
     }
 
     async function updatePTM(id: string, data: Partial<PTMSchedule>) {
-        const index = ptmSchedules.value.findIndex(p => p.id.toString() === id)
-        if (index !== -1) {
-            ptmSchedules.value[index] = { ...ptmSchedules.value[index], ...data }
-        }
+        await eventsFirebase.updatePTM(id, data)
     }
 
     async function deletePTM(id: string) {
-        ptmSchedules.value = ptmSchedules.value.filter(p => p.id.toString() !== id)
+        await eventsFirebase.deletePTM(id)
     }
 
     // Gallery Actions
     async function addGalleryMedia(media: Omit<GalleryMedia, 'id'>) {
-        const newMedia = {
-            ...media,
-            id: Date.now().toString(),
-            uploadDate: new Date().toISOString()
-        }
-        galleryMedia.value.push(newMedia as GalleryMedia)
+        await eventsFirebase.createGalleryMedia(media)
     }
 
     async function deleteGalleryMedia(id: string) {
-        galleryMedia.value = galleryMedia.value.filter(m => m.id.toString() !== id)
+        await eventsFirebase.deleteGalleryMedia(id)
     }
 
     // Certificate Actions
     async function addCertificate(certificate: Omit<Certificate, 'id'>) {
-        const newCertificate = {
-            ...certificate,
-            id: Date.now().toString()
-        }
-        certificates.value.push(newCertificate as Certificate)
+        await eventsFirebase.createCertificate(certificate)
     }
 
     async function updateCertificate(id: string, data: Partial<Certificate>) {
-        const index = certificates.value.findIndex(c => c.id.toString() === id)
-        if (index !== -1) {
-            certificates.value[index] = { ...certificates.value[index], ...data }
-        }
+        await eventsFirebase.updateCertificate(id, data)
     }
 
     async function deleteCertificate(id: string) {
-        certificates.value = certificates.value.filter(c => c.id.toString() !== id)
+        await eventsFirebase.deleteCertificate(id)
     }
 
     // Budget Actions
     async function addBudget(budget: Omit<EventBudget, 'id'>) {
-        const newBudget = {
-            ...budget,
-            id: Date.now().toString()
-        }
-        budgets.value.push(newBudget as EventBudget)
+        await eventsFirebase.createBudget(budget)
     }
 
     async function updateBudget(id: string, data: Partial<EventBudget>) {
-        const index = budgets.value.findIndex(b => b.id.toString() === id)
-        if (index !== -1) {
-            budgets.value[index] = { ...budgets.value[index], ...data }
-        }
+        await eventsFirebase.updateBudget(id, data)
     }
 
     async function deleteBudget(id: string) {
-        budgets.value = budgets.value.filter(b => b.id.toString() !== id)
+        await eventsFirebase.deleteBudget(id)
     }
 
     function cleanup() {
-        // No cleanup needed for localStorage
+        if (eventsUnsub) eventsUnsub()
+        if (competitionsUnsub) competitionsUnsub()
+        if (tripsUnsub) tripsUnsub()
+        if (ptmUnsub) ptmUnsub()
+        if (galleryUnsub) galleryUnsub()
+        if (certificatesUnsub) certificatesUnsub()
+        if (budgetsUnsub) budgetsUnsub()
     }
 
     return {
