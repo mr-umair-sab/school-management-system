@@ -75,14 +75,23 @@
 
       <!-- 1. Asset Categories Tab -->
       <div v-if="activeTab === 'categories'" class="bg-white rounded-2xl shadow-lg p-6">
-        <h3 class="text-xl font-bold mb-4">📂 Asset Categories</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold">📂 Asset Categories</h3>
+          <button @click="showAddCategory = true" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg">
+            ➕ Add Category
+          </button>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div v-for="category in assetCategories" :key="category.id"
-               @click="filterByCategory(category.id)"
-               class="p-4 border-2 rounded-lg hover:shadow-lg transition cursor-pointer"
+               class="p-4 border-2 rounded-lg hover:shadow-lg transition relative group"
                :class="selectedCategory === category.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
-            <div class="text-center">
+            <button @click.stop="handleDeleteCategory(category.id)" 
+                    class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
+                    title="Delete Category">
+              🗑️
+            </button>
+            <div @click="filterByCategory(category.id)" class="text-center cursor-pointer">
               <span class="text-4xl block mb-2">{{ category.icon }}</span>
               <p class="font-bold">{{ category.name }}</p>
               <p class="text-2xl font-bold text-blue-600 mt-2">{{ category.count }}</p>
@@ -153,14 +162,17 @@
                 </td>
                 <td class="border p-2 text-center">
                   <div class="flex gap-1 justify-center">
-                    <button @click="viewAssetDetails(asset)" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs">
+                    <button @click="viewAssetDetails(asset)" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs" title="View Details">
                       👁️
                     </button>
-                    <button @click="editAsset(asset)" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs">
+                    <button @click="editAsset(asset)" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs" title="Edit">
                       ✏️
                     </button>
-                    <button @click="printQR(asset)" class="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-xs">
+                    <button @click="printQR(asset)" class="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-xs" title="Print QR">
                       📷
+                    </button>
+                    <button @click="handleDeleteAsset(asset.id)" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs" title="Delete">
+                      🗑️
                     </button>
                   </div>
                 </td>
@@ -561,15 +573,167 @@
         </div>
       </div>
     </div>
+      <!-- Modals -->
+      <!-- Add Asset Modal -->
+      <div v-if="showAddAsset" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl">
+          <h3 class="text-xl font-bold mb-4">Add New Asset</h3>
+          <form @submit.prevent="handleAddAsset" class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Asset Name</label>
+              <input v-model="newAsset.name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Asset ID</label>
+              <input v-model="newAsset.assetId" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Category</label>
+              <select v-model="newAsset.category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option v-for="cat in assetCategories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Serial No</label>
+              <input v-model="newAsset.serialNo" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Value (RS)</label>
+              <input v-model="newAsset.value" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Purchase Date</label>
+              <input v-model="newAsset.purchaseDate" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Condition</label>
+              <select v-model="newAsset.condition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+              </select>
+            </div>
+            <div class="col-span-2 flex justify-end gap-2 mt-4">
+              <button type="button" @click="showAddAsset = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Asset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Issue Asset Modal -->
+      <div v-if="showIssueAsset" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+          <h3 class="text-xl font-bold mb-4">Issue Asset</h3>
+          <form @submit.prevent="handleIssueAsset" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Asset ID</label>
+              <input v-model="newIssue.assetId" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Issued To (Name)</label>
+              <input v-model="newIssue.issuedTo" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Type</label>
+              <select v-model="newIssue.type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option>Teacher</option>
+                <option>Student</option>
+                <option>Department</option>
+                <option>Staff</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Due Date</label>
+              <input v-model="newIssue.dueDate" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+              <button type="button" @click="showIssueAsset = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Issue</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Return Asset Modal -->
+      <div v-if="showReturnAsset" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+          <h3 class="text-xl font-bold mb-4">Return Asset</h3>
+          <form @submit.prevent="handleReturnAsset" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Return Date</label>
+              <input v-model="returnData.returnDate" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Condition</label>
+              <select v-model="returnData.condition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+                <option>Damaged</option>
+              </select>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+              <button type="button" @click="showReturnAsset = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">Return</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Add Category Modal -->
+      <div v-if="showAddCategory" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+          <h3 class="text-xl font-bold mb-4">Add New Category</h3>
+          <form @submit.prevent="handleAddCategory" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Category Name</label>
+              <input v-model="newCategory.name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="e.g., IT Equipment">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Icon (Emoji)</label>
+              <input v-model="newCategory.icon" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="e.g., 💻">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+              <button type="button" @click="showAddCategory = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Category</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useInventoryStore } from '@/stores/inventory'
 import Navbar from '@/components/Navbar.vue'
+import type { Asset, AssetIssue, StockItem, PurchaseRequest, MaintenanceRecord } from '@/types'
+
+const inventoryStore = useInventoryStore()
+const { 
+  assets, 
+  categories: assetCategories, 
+  issues: issueHistory, 
+  stockItems, 
+  purchaseRequests, 
+  maintenanceRecords: maintenanceSchedule, 
+  departments,
+  totalAssets,
+  availableAssets,
+  issuedAssets,
+  maintenanceDue,
+  totalValue,
+  lowStockAssets,
+  depreciationData
+} = storeToRefs(inventoryStore)
 
 const activeTab = ref('categories')
-const selectedCategory = ref('all')
+const selectedCategory = ref<string | number>('all')
 const searchQuery = ref('')
 
 const tabs = [
@@ -590,37 +754,50 @@ const showIssueAsset = ref(false)
 const showReturnAsset = ref(false)
 const showPurchaseRequest = ref(false)
 const showMaintenanceSchedule = ref(false)
+const showAddCategory = ref(false)
 
-// Dashboard Stats
-const totalAssets = ref(1250)
-const availableAssets = ref(890)
-const issuedAssets = ref(360)
-const lowStockItems = ref(12)
-const maintenanceDue = ref(8)
-const totalValue = ref('2.5M')
+// Forms Data
+const newCategory = ref<any>({
+  name: '',
+  icon: '',
+  count: 0,
+  available: 0,
+  issued: 0
+})
+const newAsset = ref<any>({
+  name: '',
+  category: '',
+  assetId: '',
+  serialNo: '',
+  value: 0,
+  originalValue: 0,
+  purchaseDate: '',
+  status: 'Available',
+  condition: 'Good',
+  location: '',
+  warrantyActive: false,
+  warrantyExpiry: ''
+})
 
-// Asset Categories
-const assetCategories = ref([
-  { id: 1, name: 'Classroom Furniture', icon: '🪑', count: 450, available: 320, issued: 130 },
-  { id: 2, name: 'IT Equipment', icon: '💻', count: 180, available: 120, issued: 60 },
-  { id: 3, name: 'Lab Equipment', icon: '🔬', count: 220, available: 180, issued: 40 },
-  { id: 4, name: 'Library Assets', icon: '📚', count: 150, available: 100, issued: 50 },
-  { id: 5, name: 'Sports Equipment', icon: '⚽', count: 120, available: 90, issued: 30 },
-  { id: 6, name: 'Electrical Items', icon: '💡', count: 80, available: 50, issued: 30 },
-  { id: 7, name: 'School Uniforms', icon: '👕', count: 50, available: 30, issued: 20 }
-])
+const newIssue = ref<any>({
+  assetId: '',
+  issuedTo: '',
+  type: 'Teacher',
+  issueDate: new Date().toISOString().split('T')[0],
+  dueDate: ''
+})
 
-// Assets Registry
-const assets = ref([
-  { id: 1, assetId: 'AST-2024-001', name: 'Dell Laptop', category: 'IT Equipment', serialNo: 'DL123456', status: 'Available', condition: 'Good', value: 45000, warrantyActive: true, warrantyExpiry: '2025-12-31' },
-  { id: 2, assetId: 'AST-2024-002', name: 'HP Projector', category: 'IT Equipment', serialNo: 'HP789012', status: 'Issued', condition: 'Good', value: 35000, warrantyActive: true, warrantyExpiry: '2025-06-30' },
-  { id: 3, assetId: 'AST-2024-003', name: 'Microscope', category: 'Lab Equipment', serialNo: 'MS345678', status: 'Available', condition: 'Excellent', value: 25000, warrantyActive: false, warrantyExpiry: '2023-12-31' }
-])
+const returnData = ref<any>({
+  issueId: '',
+  returnDate: new Date().toISOString().split('T')[0],
+  condition: 'Good'
+})
 
+// Computed
 const filteredAssets = computed(() => {
   let filtered = assets.value
   if (selectedCategory.value !== 'all') {
-    const category = assetCategories.value.find(c => c.id === selectedCategory.value)
+    const category = categories.value.find(c => c.id === selectedCategory.value)
     if (category) {
       filtered = filtered.filter(a => a.category === category.name)
     }
@@ -634,67 +811,22 @@ const filteredAssets = computed(() => {
   return filtered
 })
 
-// Issue/Return Data
-const totalIssued = ref(360)
-const overdueReturns = ref(15)
-const returnedToday = ref(8)
+const lowStockAlerts = computed(() => lowStockAssets.value)
 
-const issueHistory = ref([
-  { id: 1, assetName: 'Dell Laptop', issuedTo: 'Mr. Ahmed (Teacher)', type: 'Teacher', issueDate: '2024-11-01', returnDate: null, status: 'Issued', returnCondition: null },
-  { id: 2, assetName: 'Chemistry Set', issuedTo: 'Science Lab', type: 'Department', issueDate: '2024-10-15', returnDate: '2024-11-15', status: 'Returned', returnCondition: 'Good' }
-])
+const pendingRequests = computed(() => purchaseRequests.value.filter(r => r.status === 'Pending').length)
+const awaitingApproval = computed(() => purchaseRequests.value.filter(r => r.status === 'Pending').length) // Same for now
+const approvedRequests = computed(() => purchaseRequests.value.filter(r => r.status === 'Approved').length)
+const totalVendors = ref(25) // Placeholder or fetch from vendors collection if exists
 
-// Stock Management
-const lowStockAlerts = ref([
-  { id: 1, name: 'Lab Chemicals - HCl', current: 5, minimum: 10, unit: 'Liters' },
-  { id: 2, name: 'Whiteboard Markers', current: 15, minimum: 30, unit: 'Pieces' }
-])
+const maintenanceDueWeek = computed(() => maintenanceSchedule.value.filter(m => m.status === 'Scheduled').length)
+const maintenanceInProgress = computed(() => maintenanceSchedule.value.filter(m => m.status === 'In Progress').length)
+const maintenanceCompleted = computed(() => maintenanceSchedule.value.filter(m => m.status === 'Completed').length)
 
-const stockItems = ref([
-  { id: 1, name: 'Whiteboard Markers', category: 'Stationery', current: 15, minimum: 30, maximum: 100, expiryDate: null },
-  { id: 2, name: 'Lab Chemicals - HCl', category: 'Lab Equipment', current: 5, minimum: 10, maximum: 50, expiryDate: '2025-06-30' }
-])
+const originalValueTotal = computed(() => assets.value.reduce((sum, a) => sum + (a.originalValue || 0), 0))
+const currentValueTotal = computed(() => assets.value.reduce((sum, a) => sum + (a.value || 0), 0))
+const depreciationAmountTotal = computed(() => originalValueTotal.value - currentValueTotal.value)
+const writeOffs = computed(() => assets.value.filter(a => a.writeOff).length)
 
-// Purchase & Procurement
-const pendingRequests = ref(8)
-const awaitingApproval = ref(5)
-const approvedRequests = ref(12)
-const totalVendors = ref(25)
-
-const purchaseRequests = ref([
-  { id: 1, requestId: 'PR-2024-001', department: 'IT Department', items: 'Laptops (10 units)', quantity: 10, estimatedCost: 450000, status: 'Pending' },
-  { id: 2, requestId: 'PR-2024-002', department: 'Science Lab', items: 'Lab Equipment', quantity: 5, estimatedCost: 125000, status: 'Approved' }
-])
-
-// Maintenance
-const maintenanceDueWeek = ref(8)
-const maintenanceInProgress = ref(3)
-const maintenanceCompleted = ref(15)
-
-const maintenanceSchedule = ref([
-  { id: 1, assetName: 'AC Unit - Room 101', type: 'Routine Service', scheduledDate: '2024-11-25', lastService: '2024-05-20', cost: 5000, vendor: 'Cool Tech Services', status: 'Scheduled' },
-  { id: 2, assetName: 'Projector - Hall A', type: 'Repair', scheduledDate: '2024-11-22', lastService: '2024-08-15', cost: 3000, vendor: 'Tech Solutions', status: 'In Progress' }
-])
-
-// Depreciation
-const originalValue = ref(2500000)
-const currentValue = ref(1875000)
-const depreciationAmount = ref(625000)
-const writeOffs = ref(5)
-
-const depreciationData = ref([
-  { id: 1, name: 'Dell Laptop', purchaseDate: '2022-01-15', originalValue: 45000, age: 2, depreciationRate: 20, currentValue: 28800, writeOff: false },
-  { id: 2, name: 'Old Projector', purchaseDate: '2018-06-20', originalValue: 35000, age: 6, depreciationRate: 20, currentValue: 0, writeOff: true }
-])
-
-// Departments
-const departments = ref([
-  { id: 1, name: 'IT Department', head: 'Mr. Ahmed Ali', icon: '💻', totalAssets: 180, value: 450 },
-  { id: 2, name: 'Science Lab', head: 'Ms. Fatima', icon: '🔬', totalAssets: 220, value: 380 },
-  { id: 3, name: 'Library', head: 'Mr. Hassan', icon: '📚', totalAssets: 150, value: 250 }
-])
-
-// Reports
 const reportTypes = ref([
   { id: 1, name: 'Full Asset List', icon: '📋', description: 'Complete inventory report' },
   { id: 2, name: 'Damaged Assets', icon: '⚠️', description: 'Assets needing repair' },
@@ -704,13 +836,24 @@ const reportTypes = ref([
   { id: 6, name: 'Depreciation Report', icon: '💰', description: 'Annual depreciation' }
 ])
 
+// Lifecycle
+onMounted(() => {
+  inventoryStore.initialize()
+})
+
+onUnmounted(() => {
+  inventoryStore.cleanup()
+})
+
 // Helper Functions
 function getStatusBadge(status: string) {
   const badges: Record<string, string> = {
     'Available': 'bg-green-100 text-green-700',
     'Issued': 'bg-yellow-100 text-yellow-700',
     'Maintenance': 'bg-red-100 text-red-700',
-    'Damaged': 'bg-red-100 text-red-700'
+    'Damaged': 'bg-red-100 text-red-700',
+    'In Use': 'bg-blue-100 text-blue-700',
+    'Disposed': 'bg-gray-100 text-gray-700'
   }
   return badges[status] || 'bg-gray-100 text-gray-700'
 }
@@ -720,7 +863,8 @@ function getConditionBadge(condition: string) {
     'Excellent': 'bg-green-100 text-green-700',
     'Good': 'bg-blue-100 text-blue-700',
     'Fair': 'bg-yellow-100 text-yellow-700',
-    'Poor': 'bg-red-100 text-red-700'
+    'Poor': 'bg-red-100 text-red-700',
+    'Damaged': 'bg-red-100 text-red-700'
   }
   return badges[condition] || 'bg-gray-100 text-gray-700'
 }
@@ -753,12 +897,118 @@ function getMaintenanceStatusBadge(status: string) {
 }
 
 // Action Functions
-function filterByCategory(categoryId: number) {
+function filterByCategory(categoryId: number | string) {
   selectedCategory.value = categoryId
+}
+
+async function handleAddAsset() {
+  try {
+    await inventoryStore.addAsset(newAsset.value)
+    showAddAsset.value = false
+    // Reset form
+    newAsset.value = {
+      name: '',
+      category: '',
+      assetId: '',
+      serialNo: '',
+      value: 0,
+      originalValue: 0,
+      purchaseDate: '',
+      status: 'Available',
+      condition: 'Good',
+      location: '',
+      warrantyActive: false,
+      warrantyExpiry: ''
+    }
+  } catch (err) {
+    alert('Failed to add asset')
+  }
+}
+
+async function handleIssueAsset() {
+  try {
+    const asset = assets.value.find(a => a.assetId === newIssue.value.assetId)
+    if (!asset) {
+      alert('Asset not found')
+      return
+    }
+    if (asset.status !== 'Available') {
+      alert('Asset is not available')
+      return
+    }
+    
+    await inventoryStore.issueAsset({
+      ...newIssue.value,
+      assetName: asset.name,
+      status: 'Issued'
+    })
+    showIssueAsset.value = false
+    newIssue.value = {
+      assetId: '',
+      issuedTo: '',
+      type: 'Teacher',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: ''
+    }
+  } catch (err) {
+    alert('Failed to issue asset')
+  }
+}
+
+async function handleReturnAsset() {
+  try {
+    await inventoryStore.returnAsset(returnData.value.issueId, returnData.value.returnDate, returnData.value.condition)
+    showReturnAsset.value = false
+    returnData.value = {
+      issueId: '',
+      returnDate: new Date().toISOString().split('T')[0],
+      condition: 'Good'
+    }
+  } catch (err) {
+    alert('Failed to return asset')
+  }
+}
+
+async function handleAddCategory() {
+  try {
+    await inventoryStore.addCategory(newCategory.value)
+    showAddCategory.value = false
+    // Reset form
+    newCategory.value = {
+      name: '',
+      icon: '',
+      count: 0,
+      available: 0,
+      issued: 0
+    }
+  } catch (err) {
+    alert('Failed to add category')
+  }
+}
+
+async function handleDeleteCategory(categoryId: string | number) {
+  if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+    try {
+      await inventoryStore.deleteCategory(categoryId.toString())
+    } catch (err) {
+      alert('Failed to delete category')
+    }
+  }
+}
+
+async function handleDeleteAsset(assetId: string | number) {
+  if (confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
+    try {
+      await inventoryStore.deleteAsset(assetId.toString())
+    } catch (err) {
+      alert('Failed to delete asset')
+    }
+  }
 }
 
 function scanBarcode() {
   console.log('Scanning barcode...')
+  alert('Barcode scanning feature coming soon!')
 }
 
 function viewAssetDetails(asset: any) {
@@ -774,7 +1024,8 @@ function printQR(asset: any) {
 }
 
 function returnAsset(issue: any) {
-  console.log('Returning asset:', issue)
+  returnData.value.issueId = issue.id
+  showReturnAsset.value = true
 }
 
 function viewIssueDetails(issue: any) {
@@ -783,14 +1034,17 @@ function viewIssueDetails(issue: any) {
 
 function reorderStock(stock: any) {
   console.log('Reordering stock:', stock)
+  alert(`Reorder request sent for ${stock.name}`)
 }
 
 function viewRequest(request: any) {
   console.log('Viewing request:', request)
 }
 
-function approveRequest(request: any) {
-  console.log('Approving request:', request)
+async function approveRequest(request: any) {
+  if (confirm('Are you sure you want to approve this request?')) {
+    await inventoryStore.updatePurchaseRequest(request.id, { status: 'Approved' })
+  }
 }
 
 function viewMaintenanceHistory(maintenance: any) {
@@ -807,5 +1061,6 @@ function viewDepartmentAssets(dept: any) {
 
 function generateReport(reportId: number) {
   console.log('Generating report:', reportId)
+  alert('Report generation started...')
 }
 </script>

@@ -234,11 +234,80 @@ export interface Event {
   title: string
   description: string
   date: string
-  startTime: string
-  endTime: string
+  time: string
   venue: string
-  type: 'academic' | 'sports' | 'cultural' | 'holiday' | 'other'
+  organizer: string
+  category: 'academic' | 'sports' | 'cultural' | 'admin' | 'other'
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
+  icon?: string
   participants?: number[]
+}
+
+export interface Competition {
+  id: number | string
+  title: string
+  type: string
+  participants: number
+  teams: number
+  judges: number
+  winner?: string
+  status: 'upcoming' | 'ongoing' | 'completed'
+  date: string
+  venue?: string
+}
+
+export interface Trip {
+  id: number | string
+  title: string
+  destination: string
+  date: string
+  students: number
+  capacity: number
+  fee: number
+  busNumber: string
+  driver: string
+  permissionSlips: number
+  feeCollected: number
+  status: 'confirmed' | 'pending' | 'cancelled'
+}
+
+export interface PTMSchedule {
+  id: number | string
+  title: string
+  class: string
+  date: string
+  time: string
+  venue: string
+  bookedSlots: number
+  totalSlots: number
+  status: 'scheduled' | 'ongoing' | 'completed'
+}
+
+export interface GalleryMedia {
+  id: number | string
+  title: string
+  event: string
+  type: 'photo' | 'video'
+  url?: string
+  icon: string
+  uploadDate: string
+  category: string
+}
+
+export interface Certificate {
+  id: number | string
+  studentName: string
+  award: string
+  event: string
+  date: string
+  delivered: boolean
+}
+
+export interface EventBudget {
+  id: number | string
+  category: string
+  amount: number
+  eventId?: string
 }
 
 export interface Leave {
@@ -286,26 +355,90 @@ export interface Homework {
 
 export interface Asset {
   id: number | string
+  assetId: string // Custom ID like AST-2024-001
   name: string
-  category: 'furniture' | 'electronics' | 'sports' | 'lab-equipment' | 'stationery' | 'other'
-  quantity: number
+  category: string
+  serialNo: string
+  quantity: number // For consumable items, otherwise 1
   location: string
   purchaseDate: string
-  purchasePrice: number
-  condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged'
-  status: 'available' | 'in-use' | 'maintenance' | 'disposed'
+  value: number // Current value or purchase price
+  originalValue: number
+  condition: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Damaged'
+  status: 'Available' | 'Issued' | 'Maintenance' | 'Disposed' | 'In Use'
+  warrantyActive: boolean
+  warrantyExpiry: string
   supplier?: string
+  depreciationRate?: number
+  writeOff?: boolean
 }
 
-export interface HostelRoom {
+export interface AssetCategory {
   id: number | string
-  roomNumber: string
-  floor: number
-  capacity: number
-  occupied: number
-  type: 'single' | 'double' | 'triple' | 'quad'
-  hostelName: string
-  status: 'available' | 'full' | 'maintenance'
+  name: string
+  icon: string
+  count: number
+  available: number
+  issued: number
+}
+
+export interface AssetIssue {
+  id: number | string
+  assetId: string
+  assetName: string
+  issuedTo: string // Name of person/dept
+  issuedToId?: number | string // ID if linked to user
+  type: 'Teacher' | 'Student' | 'Department' | 'Staff'
+  issueDate: string
+  returnDate?: string
+  dueDate?: string
+  status: 'Issued' | 'Returned' | 'Overdue'
+  returnCondition?: string
+}
+
+export interface StockItem {
+  id: number | string
+  name: string
+  category: string
+  current: number
+  minimum: number
+  maximum: number
+  unit: string
+  expiryDate?: string
+}
+
+export interface PurchaseRequest {
+  id: number | string
+  requestId: string
+  department: string
+  items: string
+  quantity: number
+  estimatedCost: number
+  status: 'Pending' | 'Approved' | 'Rejected'
+  requestDate: string
+}
+
+export interface MaintenanceRecord {
+  id: number | string
+  assetId: string
+  assetName: string
+  type: 'Routine Service' | 'Repair' | 'Inspection'
+  scheduledDate: string
+  completionDate?: string
+  lastService?: string
+  cost: number
+  vendor?: string
+  status: 'Scheduled' | 'In Progress' | 'Completed'
+  description?: string
+}
+
+export interface DepartmentAllocation {
+  id: number | string
+  name: string
+  head: string
+  icon: string
+  totalAssets: number
+  value: number
 }
 
 export interface Announcement {

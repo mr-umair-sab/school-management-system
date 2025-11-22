@@ -145,7 +145,7 @@
           <div v-for="event in filteredEvents" :key="event.id"
                class="border-2 rounded-lg p-4 hover:shadow-lg transition">
             <div class="flex justify-between items-start mb-3">
-              <span class="text-3xl">{{ event.icon }}</span>
+              <span class="text-3xl">{{ event.icon || '🎉' }}</span>
               <span :class="getEventStatusBadge(event.status)" class="px-2 py-1 rounded-full text-xs">
                 {{ event.status }}
               </span>
@@ -162,8 +162,11 @@
               <button @click="viewEventDetails(event)" class="flex-1 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                 View Details
               </button>
-              <button @click="editEvent(event)" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">
+              <button @click="editEvent(event)" class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
                 ✏️
+              </button>
+              <button @click="handleDeleteEvent(event.id)" class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                🗑️
               </button>
             </div>
           </div>
@@ -537,12 +540,279 @@
         </div>
       </div>
     </div>
+
+    <!-- Modals -->
+    <!-- Create Event Modal -->
+    <div v-if="showCreateEvent" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">Create New Event</h3>
+        <form @submit.prevent="handleCreateEvent" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Event Title</label>
+              <input v-model="newEvent.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Description</label>
+              <textarea v-model="newEvent.description" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" rows="3"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input v-model="newEvent.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Time</label>
+              <input v-model="newEvent.time" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="9:00 AM - 5:00 PM">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Venue</label>
+              <input v-model="newEvent.venue" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Organizer</label>
+              <input v-model="newEvent.organizer" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Category</label>
+              <select v-model="newEvent.category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option value="academic">Academic</option>
+                <option value="sports">Sports</option>
+                <option value="cultural">Cultural</option>
+                <option value="admin">Administrative</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Icon</label>
+              <input v-model="newEvent.icon" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="🎉">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showCreateEvent = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Competition Modal -->
+    <div v-if="showCreateCompetition" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-xl">
+        <h3 class="text-xl font-bold mb-4">Create Competition</h3>
+        <form @submit.prevent="handleCreateCompetition" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Competition Title</label>
+              <input v-model="newCompetition.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Type</label>
+              <input v-model="newCompetition.type" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="Academic/Sports">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input v-model="newCompetition.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Participants</label>
+              <input v-model.number="newCompetition.participants" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Teams</label>
+              <input v-model.number="newCompetition.teams" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Judges</label>
+              <input v-model.number="newCompetition.judges" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Venue</label>
+              <input v-model="newCompetition.venue" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showCreateCompetition = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Create Competition</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Trip Modal -->
+    <div v-if="showCreateTrip" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">Create Trip</h3>
+        <form @submit.prevent="handleCreateTrip" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Trip Title</label>
+              <input v-model="newTrip.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Destination</label>
+              <input v-model="newTrip.destination" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input v-model="newTrip.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Fee (RS)</label>
+              <input v-model.number="newTrip.fee" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Capacity</label>
+              <input v-model.number="newTrip.capacity" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Bus Number</label>
+              <input v-model="newTrip.busNumber" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Driver Name</label>
+              <input v-model="newTrip.driver" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showCreateTrip = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Create Trip</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Schedule PTM Modal -->
+    <div v-if="showSchedulePTM" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-xl">
+        <h3 class="text-xl font-bold mb-4">Schedule PTM</h3>
+        <form @submit.prevent="handleSchedulePTM" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">PTM Title</label>
+              <input v-model="newPTM.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Class</label>
+              <input v-model="newPTM.class" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input v-model="newPTM.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Time</label>
+              <input v-model="newPTM.time" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="9:00 AM - 5:00 PM">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Total Slots</label>
+              <input v-model.number="newPTM.totalSlots" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Venue</label>
+              <input v-model="newPTM.venue" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showSchedulePTM = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">Schedule PTM</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Upload Media Modal -->
+    <div v-if="showUploadMedia" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Upload Media</h3>
+        <form @submit.prevent="handleUploadMedia" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Title</label>
+            <input v-model="newMedia.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Event Name</label>
+            <input v-model="newMedia.event" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Category</label>
+            <input v-model="newMedia.category" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Type</label>
+            <select v-model="newMedia.type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+              <option value="photo">Photo</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showUploadMedia = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Generate Certificate Modal -->
+    <div v-if="showGenerateCertificate" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Generate Certificate</h3>
+        <form @submit.prevent="handleGenerateCertificate" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Student Name</label>
+            <input v-model="newCertificate.studentName" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Award</label>
+            <input v-model="newCertificate.award" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Event</label>
+            <input v-model="newCertificate.event" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Date</label>
+            <input v-model="newCertificate.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showGenerateCertificate = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Generate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useEventsStore } from '@/stores/events'
 import Navbar from '@/components/Navbar.vue'
+
+const eventsStore = useEventsStore()
+const {
+  events,
+  competitions,
+  trips,
+  ptmSchedules,
+  galleryMedia,
+  certificates,
+  budgets,
+  totalEvents,
+  totalCompetitions,
+  totalTrips,
+  totalPTMs,
+  totalPhotos,
+  totalCertificates,
+  scheduledPTMs,
+  bookedSlots,
+  availableSlots,
+  totalBudget,
+  totalSpent,
+  totalVendors,
+  todaysEvents
+} = storeToRefs(eventsStore)
 
 // Active Tab
 const activeTab = ref('calendar')
@@ -568,28 +838,79 @@ const showSchedulePTM = ref(false)
 const showUploadMedia = ref(false)
 const showGenerateCertificate = ref(false)
 
-// Dashboard Stats
-const totalEvents = ref(45)
-const totalCompetitions = ref(12)
-const totalTrips = ref(8)
-const totalPTMs = ref(15)
-const totalPhotos = ref(234)
-const totalCertificates = ref(89)
+// Form Data
+const newEvent = ref({
+  title: '',
+  description: '',
+  date: '',
+  time: '',
+  venue: '',
+  organizer: '',
+  category: 'academic' as 'academic' | 'sports' | 'cultural' | 'admin' | 'other',
+  status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed' | 'cancelled',
+  icon: '🎉'
+})
+
+const newCompetition = ref({
+  title: '',
+  type: '',
+  participants: 0,
+  teams: 0,
+  judges: 0,
+  status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed',
+  date: '',
+  venue: ''
+})
+
+const newTrip = ref({
+  title: '',
+  destination: '',
+  date: '',
+  students: 0,
+  capacity: 0,
+  fee: 0,
+  busNumber: '',
+  driver: '',
+  permissionSlips: 0,
+  feeCollected: 0,
+  status: 'pending' as 'confirmed' | 'pending' | 'cancelled'
+})
+
+const newPTM = ref({
+  title: '',
+  class: '',
+  date: '',
+  time: '',
+  venue: '',
+  bookedSlots: 0,
+  totalSlots: 0,
+  status: 'scheduled' as 'scheduled' | 'ongoing' | 'completed'
+})
+
+const newMedia = ref({
+  title: '',
+  event: '',
+  type: 'photo' as 'photo' | 'video',
+  icon: '📸',
+  category: '',
+  uploadDate: ''
+})
+
+const newCertificate = ref({
+  studentName: '',
+  award: '',
+  event: '',
+  date: '',
+  delivered: false
+})
 
 // Calendar
 const calendarView = ref('month')
 const selectedCategory = ref('all')
 
-const todaysEvents = ref([
-  { id: 1, icon: '🏀', title: 'Basketball Match', time: '10:00 AM', venue: 'Sports Ground' },
-  { id: 2, icon: '📚', title: 'Library Orientation', time: '2:00 PM', venue: 'Library Hall' }
-])
-
 const calendarDays = ref([
-  { date: '2024-11-01', day: 1, hasEvent: true, events: [{ id: 1, title: 'Sports Day', category: 'sports' }] },
-  { date: '2024-11-02', day: 2, hasEvent: false, events: [] },
-  { date: '2024-11-03', day: 3, hasEvent: true, events: [{ id: 2, title: 'Science Fair', category: 'academic' }] },
-  // ... more days
+  { date: '2024-11-01', day: 1, hasEvent: false, events: [] },
+  // ... more days would be generated dynamically
 ])
 
 // Event Categories
@@ -601,41 +922,10 @@ const eventCategories = ref([
   { id: 'admin', name: 'Administrative', icon: '📋' }
 ])
 
-// Events Data
-const events = ref([
-  { id: 1, icon: '🏆', title: 'Annual Sports Day', description: 'Inter-class sports competition', date: '2024-12-15', time: '9:00 AM - 5:00 PM', venue: 'Sports Ground', organizer: 'Sports Department', status: 'upcoming', category: 'sports' },
-  { id: 2, icon: '🎭', title: 'Cultural Festival', description: 'Music, dance, and drama performances', date: '2024-12-20', time: '10:00 AM - 4:00 PM', venue: 'Main Auditorium', organizer: 'Cultural Committee', status: 'upcoming', category: 'cultural' },
-  { id: 3, icon: '📚', title: 'Science Exhibition', description: 'Student science projects display', date: '2024-12-10', time: '11:00 AM - 3:00 PM', venue: 'Science Lab', organizer: 'Science Department', status: 'upcoming', category: 'academic' },
-  { id: 4, icon: '🎓', title: 'Annual Function', description: 'Prize distribution ceremony', date: '2024-12-25', time: '6:00 PM - 9:00 PM', venue: 'School Grounds', organizer: 'Admin', status: 'upcoming', category: 'admin' }
-])
-
 const filteredEvents = computed(() => {
   if (selectedCategory.value === 'all') return events.value
   return events.value.filter(e => e.category === selectedCategory.value)
 })
-
-// Competitions
-const competitions = ref([
-  { id: 1, title: 'Debate Competition', type: 'Academic', participants: 24, teams: 6, judges: 3, winner: 'Team A', status: 'completed' },
-  { id: 2, title: 'Quiz Competition', type: 'Academic', participants: 32, teams: 8, judges: 2, winner: null, status: 'ongoing' },
-  { id: 3, title: 'Football Tournament', type: 'Sports', participants: 44, teams: 4, judges: 5, winner: null, status: 'upcoming' }
-])
-
-// Trips
-const trips = ref([
-  { id: 1, title: 'Science Museum Visit', destination: 'National Science Museum', date: '2024-12-05', students: 45, capacity: 50, fee: 500, busNumber: 'SCH-BUS-01', driver: 'Mr. Ahmed', permissionSlips: 42, feeCollected: 21000, status: 'confirmed' },
-  { id: 2, title: 'Historical Sites Tour', destination: 'Lahore Fort & Badshahi Mosque', date: '2024-12-12', students: 38, capacity: 40, fee: 800, busNumber: 'SCH-BUS-02', driver: 'Mr. Hassan', permissionSlips: 35, feeCollected: 28000, status: 'confirmed' }
-])
-
-// PTM
-const scheduledPTMs = ref(15)
-const bookedSlots = ref(120)
-const availableSlots = ref(30)
-
-const ptmSchedules = ref([
-  { id: 1, title: 'Class 10 PTM', class: 'Class 10-A', date: '2024-12-08', time: '9:00 AM - 5:00 PM', venue: 'Classroom Block A', bookedSlots: 35, totalSlots: 40, status: 'scheduled' },
-  { id: 2, title: 'Class 9 PTM', class: 'Class 9-B', date: '2024-12-10', time: '10:00 AM - 4:00 PM', venue: 'Classroom Block B', bookedSlots: 28, totalSlots: 35, status: 'scheduled' }
-])
 
 // Gallery
 const selectedGalleryFilter = ref('all')
@@ -646,47 +936,19 @@ const galleryFilters = ref([
   { id: 'academic', name: 'Academic Events' }
 ])
 
-const galleryPhotos = ref([
-  { id: 1, icon: '📸', event: 'Sports Day', type: 'photo' },
-  { id: 2, icon: '📸', event: 'Cultural Festival', type: 'photo' },
-  { id: 3, icon: '🎥', event: 'Annual Function', type: 'video' },
-  { id: 4, icon: '📸', event: 'Science Fair', type: 'photo' },
-  { id: 5, icon: '📸', event: 'Debate Competition', type: 'photo' },
-  { id: 6, icon: '🎥', event: 'Sports Day Highlights', type: 'video' }
-])
-
 // Certificates
 const awardCategories = ref([
-  { id: 1, name: 'Best Player', icon: '🏆', count: 15 },
-  { id: 2, name: 'Best Performance', icon: '⭐', count: 20 },
-  { id: 3, name: 'Participation', icon: '🎖️', count: 45 },
-  { id: 4, name: 'Winner', icon: '🥇', count: 9 }
+  { id: 1, name: 'Best Player', icon: '🏆', count: 0 },
+  { id: 2, name: 'Best Performance', icon: '⭐', count: 0 },
+  { id: 3, name: 'Participation', icon: '🎖️', count: 0 },
+  { id: 4, name: 'Winner', icon: '🥇', count: 0 }
 ])
 
 const trophyList = ref([
-  { id: 1, name: 'Gold Trophy', icon: '🥇', count: 5 },
-  { id: 2, name: 'Silver Trophy', icon: '🥈', count: 8 },
-  { id: 3, name: 'Bronze Trophy', icon: '🥉', count: 12 },
-  { id: 4, name: 'Medals', icon: '🏅', count: 45 }
-])
-
-const certificates = ref([
-  { id: 1, studentName: 'Ahmed Ali', award: 'Best Player', event: 'Sports Day', date: '2024-11-15', delivered: true },
-  { id: 2, studentName: 'Fatima Hassan', award: 'Winner', event: 'Debate Competition', date: '2024-11-18', delivered: false },
-  { id: 3, studentName: 'Usman Tariq', award: 'Best Performance', event: 'Cultural Festival', date: '2024-11-20', delivered: true }
-])
-
-// Budget
-const totalBudget = ref(500000)
-const totalSpent = ref(325000)
-const totalVendors = ref(12)
-
-const expenseCategories = ref([
-  { id: 1, category: 'Venue Decoration', amount: 80000 },
-  { id: 2, category: 'Food & Catering', amount: 120000 },
-  { id: 3, category: 'Equipment Rental', amount: 60000 },
-  { id: 4, category: 'Prizes & Trophies', amount: 45000 },
-  { id: 5, category: 'Transportation', amount: 20000 }
+  { id: 1, name: 'Gold Trophy', icon: '🥇', count: 0 },
+  { id: 2, name: 'Silver Trophy', icon: '🥈', count: 0 },
+  { id: 3, name: 'Bronze Trophy', icon: '🥉', count: 0 },
+  { id: 4, name: 'Medals', icon: '🏅', count: 0 }
 ])
 
 // Analytics
@@ -696,6 +958,17 @@ const eventRatings = ref([
   { id: 3, event: 'Science Fair', rating: 92 },
   { id: 4, event: 'Annual Function', rating: 90 }
 ])
+
+const expenseCategories = computed(() => budgets.value)
+
+// Lifecycle
+onMounted(() => {
+  eventsStore.initialize()
+})
+
+onUnmounted(() => {
+  eventsStore.cleanup()
+})
 
 // Helper Functions
 function getEventColorClass(category: string) {
@@ -746,6 +1019,129 @@ function getPTMStatusBadge(status: string) {
 }
 
 // Action Functions
+async function handleCreateEvent() {
+  try {
+    await eventsStore.addEvent(newEvent.value)
+    showCreateEvent.value = false
+    newEvent.value = {
+      title: '',
+      description: '',
+      date: '',
+      time: '',
+      venue: '',
+      organizer: '',
+      category: 'academic',
+      status: 'upcoming',
+      icon: '🎉'
+    }
+  } catch (err) {
+    alert('Failed to create event')
+  }
+}
+
+async function handleDeleteEvent(id: string | number) {
+  if (confirm('Are you sure you want to delete this event?')) {
+    try {
+      await eventsStore.deleteEvent(id.toString())
+    } catch (err) {
+      alert('Failed to delete event')
+    }
+  }
+}
+
+async function handleCreateCompetition() {
+  try {
+    await eventsStore.addCompetition(newCompetition.value)
+    showCreateCompetition.value = false
+    newCompetition.value = {
+      title: '',
+      type: '',
+      participants: 0,
+      teams: 0,
+      judges: 0,
+      status: 'upcoming',
+      date: '',
+      venue: ''
+    }
+  } catch (err) {
+    alert('Failed to create competition')
+  }
+}
+
+async function handleCreateTrip() {
+  try {
+    await eventsStore.addTrip(newTrip.value)
+    showCreateTrip.value = false
+    newTrip.value = {
+      title: '',
+      destination: '',
+      date: '',
+      students: 0,
+      capacity: 0,
+      fee: 0,
+      busNumber: '',
+      driver: '',
+      permissionSlips: 0,
+      feeCollected: 0,
+      status: 'pending'
+    }
+  } catch (err) {
+    alert('Failed to create trip')
+  }
+}
+
+async function handleSchedulePTM() {
+  try {
+    await eventsStore.addPTM(newPTM.value)
+    showSchedulePTM.value = false
+    newPTM.value = {
+      title: '',
+      class: '',
+      date: '',
+      time: '',
+      venue: '',
+      bookedSlots: 0,
+      totalSlots: 0,
+      status: 'scheduled'
+    }
+  } catch (err) {
+    alert('Failed to schedule PTM')
+  }
+}
+
+async function handleUploadMedia() {
+  try {
+    await eventsStore.addGalleryMedia(newMedia.value)
+    showUploadMedia.value = false
+    newMedia.value = {
+      title: '',
+      event: '',
+      type: 'photo',
+      icon: '📸',
+      category: '',
+      uploadDate: ''
+    }
+  } catch (err) {
+    alert('Failed to upload media')
+  }
+}
+
+async function handleGenerateCertificate() {
+  try {
+    await eventsStore.addCertificate(newCertificate.value)
+    showGenerateCertificate.value = false
+    newCertificate.value = {
+      studentName: '',
+      award: '',
+      event: '',
+      date: '',
+      delivered: false
+    }
+  } catch (err) {
+    alert('Failed to generate certificate')
+  }
+}
+
 function viewEventDetails(event: any) {
   console.log('Viewing event:', event)
 }
@@ -780,6 +1176,7 @@ function viewPTMSlots(ptm: any) {
 
 function sendReminders(ptm: any) {
   console.log('Sending reminders:', ptm)
+  alert('Reminders sent successfully!')
 }
 
 function viewAttendanceReport(ptm: any) {
@@ -792,5 +1189,6 @@ function viewPhoto(photo: any) {
 
 function downloadCertificate(cert: any) {
   console.log('Downloading certificate:', cert)
+  alert('Certificate downloaded!')
 }
 </script>

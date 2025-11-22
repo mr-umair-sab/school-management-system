@@ -25,6 +25,7 @@ import { useCommunicationStore } from './stores/communication'
 import { useInstallmentsStore } from './stores/installments'
 import { useSubjectsStore } from './stores/subjects'
 import { useClassesStore } from './stores/classes'
+import { useEventsStore } from './stores/events'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -53,6 +54,7 @@ const communicationStore = useCommunicationStore()
 const installmentsStore = useInstallmentsStore()
 const subjectsStore = useSubjectsStore()
 const classesStore = useClassesStore()
+const eventsStore = useEventsStore()
 
 // Initialize Students Store with Firebase real-time updates
 studentsStore.initialize().catch(err => {
@@ -174,6 +176,11 @@ installmentsStore.initialize().catch(err => {
   console.error('Failed to initialize installments store:', err)
   // Fallback to localStorage if Firebase fails
   installmentsStore.loadFromLocalStorage()
+})
+
+// Initialize Events Store with Firebase real-time updates
+eventsStore.initialize().catch(err => {
+  console.error('Failed to initialize events store:', err)
 })
 
 app.mount('#app')
