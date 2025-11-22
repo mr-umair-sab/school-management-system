@@ -316,7 +316,7 @@
               <p class="text-sm text-gray-600">Bank Transfer</p>
             </div>
             <div class="p-4 bg-purple-50 rounded-lg text-center">
-              <p class="text-2xl font-bold text-purple-600">RS:S:{{ todayCollection.online.toLocaleString() }}</p>
+              <p class="text-2xl font-bold text-purple-600">RS:{{ todayCollection.online.toLocaleString() }}</p>
               <p class="text-sm text-gray-600">Online Payment</p>
             </div>
             <div class="p-4 bg-indigo-50 rounded-lg text-center">
@@ -445,7 +445,7 @@
                 <td class="border p-3">{{ fine.class }}</td>
                 <td class="border p-3">{{ fine.type }}</td>
                 <td class="border p-3 text-center">
-                  <span class="font-bold text-red-600">RS:S:{{ fine.amount }}</span>
+                  <span class="font-bold text-red-600">RS:{{ fine.amount }}</span>
                 </td>
                 <td class="border p-3">{{ fine.reason }}</td>
                 <td class="border p-3 text-center">{{ fine.date }}</td>
@@ -509,7 +509,7 @@
                 <p class="text-sm text-gray-600">Parent: {{ student.parentPhone }}</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-red-600">RS:S:{{ student.dueAmount }}</p>
+                <p class="text-lg font-bold text-red-600">RS:{{ student.dueAmount }}</p>
                 <p class="text-sm text-gray-600">{{ student.daysOverdue }} days overdue</p>
               </div>
             </div>
@@ -544,7 +544,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div class="p-4 bg-green-50 rounded-lg">
             <h3 class="font-bold text-green-700 mb-2">Total Income</h3>
-            <p class="text-2xl font-bold text-green-600">RS:S:S:S:S:S:{{ totalIncome.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-green-600">RS:{{ totalIncome.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-red-50 rounded-lg">
@@ -559,7 +559,7 @@
           </div>
           <div class="p-4 bg-purple-50 rounded-lg">
             <h3 class="font-bold text-purple-700 mb-2">Bank Balance</h3>
-            <p class="text-2xl font-bold text-purple-600">RS:S:S:{{ bankBalance.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-purple-600">RS:{{ bankBalance.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">Current</p>
           </div>
         </div>
@@ -588,10 +588,10 @@
                 <td class="border p-3">{{ entry.category }}</td>
                 <td class="border p-3">{{ entry.description }}</td>
                 <td class="border p-3 text-center">
-                  <span v-if="entry.type === 'income'" class="font-bold text-green-600">RS:S:S:{{ entry.amount }}</span>
+                  <span v-if="entry.type === 'income'" class="font-bold text-green-600">RS:{{ entry.amount }}</span>
                 </td>
                 <td class="border p-3 text-center">
-                  <span v-if="entry.type === 'expense'" class="font-bold text-red-600">RS:S:{{ entry.amount }}</span>
+                  <span v-if="entry.type === 'expense'" class="font-bold text-red-600">RS:{{ entry.amount }}</span>
                 </td>
                 <td class="border p-3 text-center font-bold">RS:{{ entry.balance }}</td>
                 <td class="border p-3 text-center">
@@ -629,7 +629,7 @@
           </div>
           <div class="p-4 bg-green-50 rounded-lg">
             <h3 class="font-bold text-green-700 mb-2">Total Salary</h3>
-            <p class="text-2xl font-bold text-green-600">RS:S:{{ totalSalary.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-green-600">RS:{{ totalSalary.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">This Month</p>
           </div>
           <div class="p-4 bg-yellow-50 rounded-lg">
@@ -639,7 +639,7 @@
           </div>
           <div class="p-4 bg-red-50 rounded-lg">
             <h3 class="font-bold text-red-700 mb-2">Pending</h3>
-            <p class="text-2xl font-bold text-red-600">RS:S:S:S:{{ pendingSalary.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-red-600">RS:{{ pendingSalary.toLocaleString() }}</p>
             <p class="text-sm text-gray-600">{{ pendingStaffCount }} Staff</p>
           </div>
         </div>
@@ -666,7 +666,7 @@
                   </div>
                 </td>
                 <td class="border p-3">{{ staff.designation }}</td>
-                <td class="border p-3 text-center">RS:S:{{ staff.basicPay }}</td>
+                <td class="border p-3 text-center">RS:{{ staff.basicPay }}</td>
                 <td class="border p-3 text-center text-green-600">+RS:{{ staff.allowances }}</td>
                 <td class="border p-3 text-center text-red-600">-RS:{{ staff.deductions }}</td>
                 <td class="border p-3 text-center">
