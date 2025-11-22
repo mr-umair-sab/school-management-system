@@ -1,44 +1,91 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-export interface Asset {
-  id: number
-  name: string
-  category: 'furniture' | 'electronics' | 'sports' | 'lab-equipment' | 'stationery' | 'other'
-  quantity: number
-  location: string
-  purchaseDate: string
-  purchasePrice: number
-  condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged'
-  status: 'available' | 'in-use' | 'maintenance' | 'disposed'
-  supplier?: string
-}
+import type { Asset } from '@/types'
+import * as inventoryFirebase from '@/services/inventoryFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useInventoryStore = defineStore('inventory', () => {
   const assets = ref<Asset[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let unsubscribe: Unsubscribe | null = null
 
   const lowStockAssets = computed(() =>
     assets.value.filter(a => a.quantity < 10 && a.status === 'available')
   )
 
-  function addAsset(asset: Omit<Asset, 'id'>) {
-    assets.value.push({ ...asset, id: Date.now() })
-    saveToLocalStorage()
+  async function initialize() {
+    try {
+      loading.value = true
+
+      unsubscribe = inventoryFirebase.subscribeToAssets((data) => {
+        assets.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize inventory store:', err)
+    }
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('assets', JSON.stringify(assets.value))
+  async function addAsset(asset: Omit<Asset, 'id'>) {
+    try {
+      loading.value = true
+      await inventoryFirebase.createAsset(asset)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function updateAsset(id: string, data: Partial<Asset>) {
+    try {
+      loading.value = true
+      await inventoryFirebase.updateAsset(id, data)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteAsset(id: string) {
+    try {
+      loading.value = true
+      await inventoryFirebase.deleteAsset(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
   function loadFromLocalStorage() {
-    const saved = localStorage.getItem('assets')
-    if (saved) assets.value = JSON.parse(saved)
+    console.warn('loadFromLocalStorage is deprecated for Inventory. Use initialize() instead.')
+  }
+
+  function cleanup() {
+    if (unsubscribe) unsubscribe()
   }
 
   return {
     assets,
     lowStockAssets,
+    loading,
+    error,
+    initialize,
     addAsset,
-    loadFromLocalStorage
+    updateAsset,
+    deleteAsset,
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

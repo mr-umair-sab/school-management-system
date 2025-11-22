@@ -1,42 +1,91 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-export interface HostelRoom {
-  id: number
-  roomNumber: string
-  floor: number
-  capacity: number
-  occupied: number
-  type: 'single' | 'double' | 'triple' | 'quad'
-  hostelName: string
-  status: 'available' | 'full' | 'maintenance'
-}
+import type { HostelRoom } from '@/types'
+import * as hostelFirebase from '@/services/hostelFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useHostelStore = defineStore('hostel', () => {
   const rooms = ref<HostelRoom[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let unsubscribe: Unsubscribe | null = null
 
   const availableRooms = computed(() =>
     rooms.value.filter(r => r.status === 'available' && r.occupied < r.capacity)
   )
 
-  function addRoom(room: Omit<HostelRoom, 'id'>) {
-    rooms.value.push({ ...room, id: Date.now() })
-    saveToLocalStorage()
+  async function initialize() {
+    try {
+      loading.value = true
+
+      unsubscribe = hostelFirebase.subscribeToRooms((data) => {
+        rooms.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize hostel store:', err)
+    }
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('hostelRooms', JSON.stringify(rooms.value))
+  async function addRoom(room: Omit<HostelRoom, 'id'>) {
+    try {
+      loading.value = true
+      await hostelFirebase.createRoom(room)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function updateRoom(id: string, data: Partial<HostelRoom>) {
+    try {
+      loading.value = true
+      await hostelFirebase.updateRoom(id, data)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteRoom(id: string) {
+    try {
+      loading.value = true
+      await hostelFirebase.deleteRoom(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
   function loadFromLocalStorage() {
-    const saved = localStorage.getItem('hostelRooms')
-    if (saved) rooms.value = JSON.parse(saved)
+    console.warn('loadFromLocalStorage is deprecated for Hostel. Use initialize() instead.')
+  }
+
+  function cleanup() {
+    if (unsubscribe) unsubscribe()
   }
 
   return {
     rooms,
     availableRooms,
+    loading,
+    error,
+    initialize,
     addRoom,
-    loadFromLocalStorage
+    updateRoom,
+    deleteRoom,
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

@@ -1,10 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Notice, Event } from '@/types'
+import * as noticesFirebase from '@/services/noticesFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useNoticesStore = defineStore('notices', () => {
   const notices = ref<Notice[]>([])
   const events = ref<Event[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let noticesUnsubscribe: Unsubscribe | null = null
+  let eventsUnsubscribe: Unsubscribe | null = null
 
   const urgentNotices = computed(() =>
     notices.value.filter(n => n.priority === 'urgent' || n.priority === 'high')
@@ -12,45 +19,101 @@ export const useNoticesStore = defineStore('notices', () => {
   )
 
   const upcomingEvents = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] || ''
     return events.value.filter(e => e.date >= today)
       .sort((a, b) => a.date.localeCompare(b.date))
   })
 
-  function addNotice(notice: Omit<Notice, 'id'>) {
-    notices.value.unshift({ ...notice, id: Date.now() })
-    saveToLocalStorage()
-  }
+  async function initialize() {
+    try {
+      loading.value = true
 
-  function updateNotice(id: number, notice: Partial<Notice>) {
-    const index = notices.value.findIndex(n => n.id === id)
-    if (index !== -1) {
-      notices.value[index] = { ...notices.value[index], ...notice } as Notice
-      saveToLocalStorage()
+      noticesUnsubscribe = noticesFirebase.subscribeToNotices((data) => {
+        notices.value = data
+      })
+
+      eventsUnsubscribe = noticesFirebase.subscribeToEvents((data) => {
+        events.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize notices store:', err)
     }
   }
 
-  function deleteNotice(id: number) {
-    notices.value = notices.value.filter(n => n.id !== id)
-    saveToLocalStorage()
-  }
-
-  function addEvent(event: Omit<Event, 'id'>) {
-    events.value.push({ ...event, id: Date.now() })
-    saveToLocalStorage()
-  }
-
-  function updateEvent(id: number, event: Partial<Event>) {
-    const index = events.value.findIndex(e => e.id === id)
-    if (index !== -1) {
-      events.value[index] = { ...events.value[index], ...event } as Event
-      saveToLocalStorage()
+  async function addNotice(notice: Omit<Notice, 'id'>) {
+    try {
+      loading.value = true
+      await noticesFirebase.createNotice(notice)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
   }
 
-  function deleteEvent(id: number) {
-    events.value = events.value.filter(e => e.id !== id)
-    saveToLocalStorage()
+  async function updateNotice(id: string, notice: Partial<Notice>) {
+    try {
+      loading.value = true
+      await noticesFirebase.updateNotice(id, notice)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteNotice(id: string) {
+    try {
+      loading.value = true
+      await noticesFirebase.deleteNotice(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function addEvent(event: Omit<Event, 'id'>) {
+    try {
+      loading.value = true
+      await noticesFirebase.createEvent(event)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function updateEvent(id: string, event: Partial<Event>) {
+    try {
+      loading.value = true
+      await noticesFirebase.updateEvent(id, event)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteEvent(id: string) {
+    try {
+      loading.value = true
+      await noticesFirebase.deleteEvent(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
   function getNoticesByRole(role: string) {
@@ -59,16 +122,13 @@ export const useNoticesStore = defineStore('notices', () => {
     )
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('notices', JSON.stringify(notices.value))
-    localStorage.setItem('events', JSON.stringify(events.value))
+  function loadFromLocalStorage() {
+    console.warn('loadFromLocalStorage is deprecated for Notices. Use initialize() instead.')
   }
 
-  function loadFromLocalStorage() {
-    const savedNotices = localStorage.getItem('notices')
-    const savedEvents = localStorage.getItem('events')
-    if (savedNotices) notices.value = JSON.parse(savedNotices)
-    if (savedEvents) events.value = JSON.parse(savedEvents)
+  function cleanup() {
+    if (noticesUnsubscribe) noticesUnsubscribe()
+    if (eventsUnsubscribe) eventsUnsubscribe()
   }
 
   return {
@@ -76,6 +136,9 @@ export const useNoticesStore = defineStore('notices', () => {
     events,
     urgentNotices,
     upcomingEvents,
+    loading,
+    error,
+    initialize,
     addNotice,
     updateNotice,
     deleteNotice,
@@ -83,6 +146,8 @@ export const useNoticesStore = defineStore('notices', () => {
     updateEvent,
     deleteEvent,
     getNoticesByRole,
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

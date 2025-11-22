@@ -25,7 +25,7 @@ export interface MedicalInfo {
 }
 
 export interface Student {
-  id: number
+  id: number | string
   name: string
   rollNumber: string
   class: string
@@ -45,7 +45,7 @@ export interface Student {
 }
 
 export interface Teacher {
-  id: number
+  id: number | string
   name: string
   email: string
   phone: string
@@ -64,7 +64,7 @@ export interface Teacher {
 }
 
 export interface Document {
-  id: number
+  id: number | string
   name: string
   type: string
   url: string
@@ -72,7 +72,7 @@ export interface Document {
 }
 
 export interface Class {
-  id: number
+  id: number | string
   name: string
   section: string
   classTeacher: number // teacher id
@@ -82,7 +82,7 @@ export interface Class {
 }
 
 export interface Subject {
-  id: number
+  id: number | string
   name: string
   code: string
   class: string
@@ -91,7 +91,7 @@ export interface Subject {
 }
 
 export interface Timetable {
-  id: number
+  id: number | string
   class: string
   section: string
   day: string
@@ -108,7 +108,7 @@ export interface Period {
 }
 
 export interface Attendance {
-  id: number
+  id: number | string
   date: string
   class: string
   section: string
@@ -122,7 +122,7 @@ export interface AttendanceRecord {
 }
 
 export interface Exam {
-  id: number
+  id: number | string
   name: string
   type: 'unit-test' | 'mid-term' | 'final' | 'practical'
   class: string
@@ -143,9 +143,9 @@ export interface ExamSubject {
 }
 
 export interface Result {
-  id: number
-  examId: number
-  studentId: number
+  id: number | string
+  examId: number | string
+  studentId: number | string
   marks: SubjectMarks[]
   totalMarks: number
   percentage: number
@@ -162,7 +162,7 @@ export interface SubjectMarks {
 }
 
 export interface FeeStructure {
-  id: number
+  id: number | string
   class: string
   academicYear: string
   components: FeeComponent[]
@@ -177,8 +177,8 @@ export interface FeeComponent {
 }
 
 export interface FeeRecord {
-  id: number
-  studentId: number
+  id: number | string
+  studentId: number | string
   academicYear: string
   totalFee: number
   paidAmount: number
@@ -188,7 +188,7 @@ export interface FeeRecord {
 }
 
 export interface Payment {
-  id: number
+  id: number | string
   date: string
   amount: number
   method: 'cash' | 'card' | 'upi' | 'bank-transfer' | 'cheque'
@@ -197,7 +197,7 @@ export interface Payment {
 }
 
 export interface Book {
-  id: number
+  id: number | string
   title: string
   author: string
   isbn: string
@@ -208,9 +208,9 @@ export interface Book {
 }
 
 export interface BookIssue {
-  id: number
-  bookId: number
-  studentId: number
+  id: number | string
+  bookId: number | string
+  studentId: number | string
   issueDate: string
   dueDate: string
   returnDate?: string
@@ -219,7 +219,7 @@ export interface BookIssue {
 }
 
 export interface Notice {
-  id: number
+  id: number | string
   title: string
   content: string
   date: string
@@ -230,7 +230,7 @@ export interface Notice {
 }
 
 export interface Event {
-  id: number
+  id: number | string
   title: string
   description: string
   date: string
@@ -242,8 +242,8 @@ export interface Event {
 }
 
 export interface Leave {
-  id: number
-  userId: number
+  id: number | string
+  userId: number | string
   userType: 'teacher' | 'student'
   startDate: string
   endDate: string
@@ -253,7 +253,7 @@ export interface Leave {
 }
 
 export interface Transport {
-  id: number
+  id: number | string
   routeNumber: string
   routeName: string
   driverName: string
@@ -268,4 +268,65 @@ export interface BusStop {
   name: string
   time: string
   sequence: number
+}
+
+export interface Homework {
+  id: number | string
+  title: string
+  description: string
+  subject: string
+  class: string
+  section: string
+  teacherId: number
+  assignedDate: string
+  dueDate: string
+  totalMarks: number
+  difficulty: 'easy' | 'medium' | 'hard'
+}
+
+export interface Asset {
+  id: number | string
+  name: string
+  category: 'furniture' | 'electronics' | 'sports' | 'lab-equipment' | 'stationery' | 'other'
+  quantity: number
+  location: string
+  purchaseDate: string
+  purchasePrice: number
+  condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged'
+  status: 'available' | 'in-use' | 'maintenance' | 'disposed'
+  supplier?: string
+}
+
+export interface HostelRoom {
+  id: number | string
+  roomNumber: string
+  floor: number
+  capacity: number
+  occupied: number
+  type: 'single' | 'double' | 'triple' | 'quad'
+  hostelName: string
+  status: 'available' | 'full' | 'maintenance'
+}
+
+export interface Announcement {
+  id: number | string
+  title: string
+  content: string
+  date: string
+  targetAudience: ('students' | 'teachers' | 'parents' | 'all')[]
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  createdBy: number
+}
+
+export interface Meeting {
+  id: number | string
+  title: string
+  type: 'parent-teacher' | 'staff' | 'pta' | 'other'
+  date: string
+  time: string
+  duration: number
+  location: string
+  organizer: number
+  participants: number[]
+  agenda: string
 }

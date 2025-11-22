@@ -1,68 +1,117 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Book, BookIssue } from '@/types'
+import * as libraryFirebase from '@/services/libraryFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useLibraryStore = defineStore('library', () => {
   const books = ref<Book[]>([])
   const bookIssues = ref<BookIssue[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let booksUnsubscribe: Unsubscribe | null = null
+  let issuesUnsubscribe: Unsubscribe | null = null
 
   const availableBooks = computed(() =>
     books.value.filter(b => b.available > 0)
   )
 
   const overdueIssues = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] || ''
     return bookIssues.value.filter(
       i => i.status === 'issued' && i.dueDate < today
     )
   })
 
-  function addBook(book: Omit<Book, 'id'>) {
-    books.value.push({ ...book, id: Date.now() })
-    saveToLocalStorage()
-  }
+  async function initialize() {
+    try {
+      loading.value = true
 
-  function updateBook(id: number, book: Partial<Book>) {
-    const index = books.value.findIndex(b => b.id === id)
-    if (index !== -1) {
-      books.value[index] = { ...books.value[index], ...book } as Book
-      saveToLocalStorage()
+      booksUnsubscribe = libraryFirebase.subscribeToBooks((data) => {
+        books.value = data
+      })
+
+      issuesUnsubscribe = libraryFirebase.subscribeToBookIssues((data) => {
+        bookIssues.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize library store:', err)
     }
   }
 
-  function issueBook(issue: Omit<BookIssue, 'id'>) {
-    const book = books.value.find(b => b.id === issue.bookId)
-    if (book && book.available > 0) {
-      book.available--
-      bookIssues.value.push({ ...issue, id: Date.now(), status: 'issued' })
-      saveToLocalStorage()
+  async function addBook(book: Omit<Book, 'id'>) {
+    try {
+      loading.value = true
+      await libraryFirebase.createBook(book)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function updateBook(id: string, book: Partial<Book>) {
+    try {
+      loading.value = true
+      await libraryFirebase.updateBook(id, book)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteBook(id: string) {
+    try {
+      loading.value = true
+      await libraryFirebase.deleteBook(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function issueBook(issue: Omit<BookIssue, 'id'>) {
+    try {
+      loading.value = true
+      await libraryFirebase.issueBook(issue)
+      loading.value = false
       return true
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
-    return false
   }
 
-  function returnBook(issueId: number, fine: number = 0) {
-    const issue = bookIssues.value.find(i => i.id === issueId)
-    if (issue) {
-      issue.returnDate = new Date().toISOString().split('T')[0]
-      issue.status = 'returned'
-      issue.fine = fine
-
-      const book = books.value.find(b => b.id === issue.bookId)
-      if (book) book.available++
-
-      saveToLocalStorage()
+  async function returnBook(issueId: string, fine: number = 0) {
+    try {
+      loading.value = true
+      await libraryFirebase.returnBook(issueId, fine)
+      loading.value = false
       return true
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
-    return false
   }
 
-  function getIssuesByStudent(studentId: number) {
-    return bookIssues.value.filter(i => i.studentId === studentId)
+  function getIssuesByStudent(studentId: string | number) {
+    return bookIssues.value.filter(i => i.studentId == studentId)
   }
 
-  function calculateFine(issueId: number, finePerDay: number = 5) {
-    const issue = bookIssues.value.find(i => i.id === issueId)
+  function calculateFine(issueId: string | number, finePerDay: number = 5) {
+    const issue = bookIssues.value.find(i => i.id == issueId)
     if (!issue || issue.status !== 'issued') return 0
 
     const today = new Date()
@@ -74,16 +123,13 @@ export const useLibraryStore = defineStore('library', () => {
     return daysOverdue * finePerDay
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('books', JSON.stringify(books.value))
-    localStorage.setItem('bookIssues', JSON.stringify(bookIssues.value))
+  function loadFromLocalStorage() {
+    console.warn('loadFromLocalStorage is deprecated for Library. Use initialize() instead.')
   }
 
-  function loadFromLocalStorage() {
-    const savedBooks = localStorage.getItem('books')
-    const savedIssues = localStorage.getItem('bookIssues')
-    if (savedBooks) books.value = JSON.parse(savedBooks)
-    if (savedIssues) bookIssues.value = JSON.parse(savedIssues)
+  function cleanup() {
+    if (booksUnsubscribe) booksUnsubscribe()
+    if (issuesUnsubscribe) issuesUnsubscribe()
   }
 
   return {
@@ -91,12 +137,18 @@ export const useLibraryStore = defineStore('library', () => {
     bookIssues,
     availableBooks,
     overdueIssues,
+    loading,
+    error,
+    initialize,
     addBook,
     updateBook,
+    deleteBook,
     issueBook,
     returnBook,
     getIssuesByStudent,
     calculateFine,
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

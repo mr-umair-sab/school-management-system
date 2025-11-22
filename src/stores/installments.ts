@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import * as installmentsFirebase from '@/services/installmentsFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 // Installment Plan Structure
 export interface InstallmentPlan {
-  id: number
+  id: number | string
   planID: string
   title: string
   description: string
@@ -17,7 +19,7 @@ export interface InstallmentPlan {
 }
 
 export interface InstallmentDetail {
-  id: number
+  id: number | string
   installmentID: string
   planID: string
   title: string
@@ -49,8 +51,8 @@ export interface DiscountRule {
 
 // Student Fee Profile
 export interface StudentFeeProfile {
-  id: number
-  studentId: number
+  id: number | string
+  studentId: number | string
   planID: string
   feeType: 'monthly' | 'quarterly' | 'installment' | 'custom'
   totalFee: number
@@ -65,9 +67,9 @@ export interface StudentFeeProfile {
 }
 
 export interface StudentInstallment {
-  id: number
+  id: number | string
   installmentID: string
-  studentId: number
+  studentId: number | string
   title: string
   amount: number
   dueDate: string
@@ -83,9 +85,9 @@ export interface StudentInstallment {
 }
 
 export interface PaymentRecord {
-  id: number
+  id: number | string
   paymentID: string
-  studentId: number
+  studentId: number | string
   installmentID: string
   amount: number
   paymentDate: string
@@ -100,9 +102,9 @@ export interface PaymentRecord {
 
 // Invoice
 export interface Invoice {
-  id: number
+  id: number | string
   invoiceNumber: string
-  studentId: number
+  studentId: number | string
   installmentID: string
   issueDate: string
   dueDate: string
@@ -116,9 +118,9 @@ export interface Invoice {
 
 // Receipt
 export interface Receipt {
-  id: number
+  id: number | string
   receiptNumber: string
-  studentId: number
+  studentId: number | string
   installmentID: string
   paymentID: string
   amount: number
@@ -130,8 +132,8 @@ export interface Receipt {
 
 // Notification
 export interface FeeNotification {
-  id: number
-  studentId: number
+  id: number | string
+  studentId: number | string
   type: 'due-reminder' | 'overdue-alert' | 'payment-received' | 'balance-alert'
   message: string
   sentDate: string
@@ -147,6 +149,15 @@ export const useInstallmentsStore = defineStore('installments', () => {
   const invoices = ref<Invoice[]>([])
   const receipts = ref<Receipt[]>([])
   const notifications = ref<FeeNotification[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let plansUnsubscribe: Unsubscribe | null = null
+  let profilesUnsubscribe: Unsubscribe | null = null
+  let paymentsUnsubscribe: Unsubscribe | null = null
+  let invoicesUnsubscribe: Unsubscribe | null = null
+  let receiptsUnsubscribe: Unsubscribe | null = null
+  let notificationsUnsubscribe: Unsubscribe | null = null
 
   // Computed
   const activePlans = computed(() =>
@@ -164,7 +175,7 @@ export const useInstallmentsStore = defineStore('installments', () => {
   )
 
   const overdueInstallments = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] || ''
     const overdue: StudentInstallment[] = []
 
     studentFeeProfiles.value.forEach(profile => {
@@ -182,40 +193,93 @@ export const useInstallmentsStore = defineStore('installments', () => {
     studentFeeProfiles.value.filter(p => p.status === 'defaulter')
   )
 
+  async function initialize() {
+    try {
+      loading.value = true
+
+      plansUnsubscribe = installmentsFirebase.subscribeToPlans((data) => {
+        plans.value = data
+      })
+
+      profilesUnsubscribe = installmentsFirebase.subscribeToProfiles((data) => {
+        studentFeeProfiles.value = data
+      })
+
+      paymentsUnsubscribe = installmentsFirebase.subscribeToPayments((data) => {
+        payments.value = data
+      })
+
+      invoicesUnsubscribe = installmentsFirebase.subscribeToInvoices((data) => {
+        invoices.value = data
+      })
+
+      receiptsUnsubscribe = installmentsFirebase.subscribeToReceipts((data) => {
+        receipts.value = data
+      })
+
+      notificationsUnsubscribe = installmentsFirebase.subscribeToNotifications((data) => {
+        notifications.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize installments store:', err)
+    }
+  }
+
   // Actions - Installment Plan Management
-  function createPlan(plan: Omit<InstallmentPlan, 'id' | 'planID'>) {
-    const planID = `PLAN-${Date.now()}`
-    const newPlan: InstallmentPlan = {
-      ...plan,
-      id: Date.now(),
-      planID,
-      installments: plan.installments.map((inst, index) => ({
-        ...inst,
-        id: Date.now() + index,
-        installmentID: `${planID}-INST-${index + 1}`,
-        planID
-      }))
-    }
-    plans.value.push(newPlan)
-    saveToLocalStorage()
-    return newPlan
-  }
-
-  function updatePlan(id: number, plan: Partial<InstallmentPlan>) {
-    const index = plans.value.findIndex(p => p.id === id)
-    if (index !== -1) {
-      plans.value[index] = { ...plans.value[index], ...plan }
-      saveToLocalStorage()
+  async function createPlan(plan: Omit<InstallmentPlan, 'id' | 'planID'>) {
+    try {
+      loading.value = true
+      const planID = `PLAN-${Date.now()}`
+      const newPlan = {
+        ...plan,
+        planID,
+        installments: plan.installments.map((inst, index) => ({
+          ...inst,
+          id: Date.now() + index,
+          installmentID: `${planID}-INST-${index + 1}`,
+          planID
+        }))
+      }
+      await installmentsFirebase.createPlan(newPlan)
+      loading.value = false
+      return newPlan
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
   }
 
-  function deletePlan(id: number) {
-    plans.value = plans.value.filter(p => p.id !== id)
-    saveToLocalStorage()
+  async function updatePlan(id: string, plan: Partial<InstallmentPlan>) {
+    try {
+      loading.value = true
+      await installmentsFirebase.updatePlan(id, plan)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function duplicatePlan(id: number, newTitle: string) {
-    const plan = plans.value.find(p => p.id === id)
+  async function deletePlan(id: string) {
+    try {
+      loading.value = true
+      await installmentsFirebase.deletePlan(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function duplicatePlan(id: string, newTitle: string) {
+    const plan = plans.value.find(p => p.id == id)
     if (plan) {
       const duplicated = {
         ...plan,
@@ -224,17 +288,16 @@ export const useInstallmentsStore = defineStore('installments', () => {
       }
       delete (duplicated as any).id
       delete (duplicated as any).planID
-      return createPlan(duplicated)
+      return createPlan(duplicated as Omit<InstallmentPlan, 'id' | 'planID'>)
     }
   }
 
   // Student Fee Profile Management
-  function assignPlanToStudent(studentId: number, planID: string, customizations?: Partial<StudentFeeProfile>) {
+  async function assignPlanToStudent(studentId: number | string, planID: string, customizations?: Partial<StudentFeeProfile>) {
     const plan = plans.value.find(p => p.planID === planID)
     if (!plan) return null
 
-    const profile: StudentFeeProfile = {
-      id: Date.now(),
+    const profile: Omit<StudentFeeProfile, 'id'> = {
       studentId,
       planID,
       feeType: 'installment',
@@ -261,97 +324,126 @@ export const useInstallmentsStore = defineStore('installments', () => {
       ...customizations
     }
 
-    studentFeeProfiles.value.push(profile)
-    saveToLocalStorage()
-    return profile
+    try {
+      loading.value = true
+      const id = await installmentsFirebase.createProfile(profile)
+      loading.value = false
+      return { ...profile, id }
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function bulkAssignPlan(studentIds: number[], planID: string) {
-    const results = studentIds.map(studentId => assignPlanToStudent(studentId, planID))
+  async function bulkAssignPlan(studentIds: (number | string)[], planID: string) {
+    const results = await Promise.all(studentIds.map(studentId => assignPlanToStudent(studentId, planID)))
     return results.filter(r => r !== null)
   }
 
-  function getStudentFeeProfile(studentId: number) {
-    return studentFeeProfiles.value.find(p => p.studentId === studentId)
+  function getStudentFeeProfile(studentId: number | string) {
+    return studentFeeProfiles.value.find(p => p.studentId == studentId)
   }
 
-  function updateStudentFeeProfile(studentId: number, updates: Partial<StudentFeeProfile>) {
-    const index = studentFeeProfiles.value.findIndex(p => p.studentId === studentId)
-    if (index !== -1) {
-      studentFeeProfiles.value[index] = { ...studentFeeProfiles.value[index], ...updates }
-      saveToLocalStorage()
+  async function updateStudentFeeProfile(studentId: number | string, updates: Partial<StudentFeeProfile>) {
+    const profile = studentFeeProfiles.value.find(p => p.studentId == studentId)
+    if (profile) {
+      try {
+        loading.value = true
+        await installmentsFirebase.updateProfile(profile.id.toString(), updates)
+        loading.value = false
+      } catch (err: any) {
+        error.value = err.message
+        loading.value = false
+        throw err
+      }
     }
   }
 
   // Payment Collection
-  function collectPayment(payment: Omit<PaymentRecord, 'id' | 'paymentID' | 'receiptNumber'>) {
+  async function collectPayment(payment: Omit<PaymentRecord, 'id' | 'paymentID' | 'receiptNumber'>) {
     const paymentID = `PAY-${Date.now()}`
     const receiptNumber = `REC-${Date.now()}`
 
-    const newPayment: PaymentRecord = {
+    const newPayment: Omit<PaymentRecord, 'id'> = {
       ...payment,
-      id: Date.now(),
       paymentID,
       receiptNumber,
       status: 'completed'
     }
 
-    payments.value.push(newPayment)
+    try {
+      loading.value = true
+      await installmentsFirebase.createPayment(newPayment)
 
-    // Update student installment
-    const profile = studentFeeProfiles.value.find(p => p.studentId === payment.studentId)
-    if (profile) {
-      const installment = profile.installments.find(i => i.installmentID === payment.installmentID)
-      if (installment) {
-        installment.paidAmount += payment.amount
-        installment.remainingAmount = Math.max(0, installment.amount - installment.paidAmount + installment.lateFee - installment.discount)
+      // Update student installment
+      const profile = studentFeeProfiles.value.find(p => p.studentId == payment.studentId)
+      if (profile) {
+        const installment = profile.installments.find(i => i.installmentID === payment.installmentID)
+        if (installment) {
+          installment.paidAmount += payment.amount
+          installment.remainingAmount = Math.max(0, installment.amount - installment.paidAmount + installment.lateFee - installment.discount)
 
-        if (installment.remainingAmount === 0) {
-          installment.status = 'paid'
-          installment.paymentDate = payment.paymentDate
-        } else if (installment.paidAmount > 0) {
-          installment.status = 'partial'
+          if (installment.remainingAmount === 0) {
+            installment.status = 'paid'
+            installment.paymentDate = payment.paymentDate
+          } else if (installment.paidAmount > 0) {
+            installment.status = 'partial'
+          }
         }
+
+        // Update profile totals
+        profile.totalPaid += payment.amount
+        profile.totalRemaining = Math.max(0, profile.totalFee - profile.totalPaid + profile.totalLateFee - profile.totalDiscount)
+        profile.lastPaymentDate = payment.paymentDate || new Date().toISOString().split('T')[0]
+        // Note: paymentHistory update is handled by real-time listener on payments collection if we link them, 
+        // but here we might need to update the profile document if we store history there.
+        // For now, let's assume history is derived or stored separately.
+
+        // Update status
+        if (profile.totalRemaining === 0) {
+          profile.status = 'completed'
+        }
+
+        await installmentsFirebase.updateProfile(profile.id.toString(), {
+          installments: profile.installments,
+          totalPaid: profile.totalPaid,
+          totalRemaining: profile.totalRemaining,
+          lastPaymentDate: profile.lastPaymentDate,
+          status: profile.status
+        })
       }
 
-      // Update profile totals
-      profile.totalPaid += payment.amount
-      profile.totalRemaining = Math.max(0, profile.totalFee - profile.totalPaid + profile.totalLateFee - profile.totalDiscount)
-      profile.lastPaymentDate = payment.paymentDate
-      profile.paymentHistory.push(newPayment)
+      // Generate receipt
+      await generateReceipt({ ...newPayment, id: 'temp' } as PaymentRecord)
 
-      // Update status
-      if (profile.totalRemaining === 0) {
-        profile.status = 'completed'
-      }
+      // Send notification
+      await sendNotification({
+        studentId: payment.studentId,
+        type: 'payment-received',
+        message: `Payment of ₹${payment.amount} received successfully. Receipt: ${receiptNumber}`,
+        channel: 'sms'
+      })
+
+      loading.value = false
+      return newPayment
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
-
-    // Generate receipt
-    generateReceipt(newPayment)
-
-    // Send notification
-    sendNotification({
-      studentId: payment.studentId,
-      type: 'payment-received',
-      message: `Payment of ₹${payment.amount} received successfully. Receipt: ${receiptNumber}`,
-      channel: 'sms'
-    })
-
-    saveToLocalStorage()
-    return newPayment
   }
 
   // Invoice Generation
-  function generateInvoice(studentId: number, installmentID: string) {
-    const profile = studentFeeProfiles.value.find(p => p.studentId === studentId)
+  async function generateInvoice(studentId: number | string, installmentID: string) {
+    const profile = studentFeeProfiles.value.find(p => p.studentId == studentId)
     if (!profile) return null
 
     const installment = profile.installments.find(i => i.installmentID === installmentID)
     if (!installment) return null
 
     const invoiceNumber = `INV-${Date.now()}`
-    const invoice: Invoice = {
-      id: Date.now(),
+    const invoice: Omit<Invoice, 'id'> = {
       invoiceNumber,
       studentId,
       installmentID,
@@ -362,19 +454,30 @@ export const useInstallmentsStore = defineStore('installments', () => {
       discount: installment.discount,
       totalAmount: installment.amount + installment.lateFee - installment.discount,
       status: installment.status === 'paid' ? 'paid' :
-              installment.dueDate < new Date().toISOString().split('T')[0] ? 'overdue' : 'issued'
+        installment.dueDate < new Date().toISOString().split('T')[0] ? 'overdue' : 'issued'
     }
 
-    invoices.value.push(invoice)
-    installment.invoiceNumber = invoiceNumber
-    saveToLocalStorage()
-    return invoice
+    try {
+      loading.value = true
+      await installmentsFirebase.createInvoice(invoice)
+
+      installment.invoiceNumber = invoiceNumber
+      await installmentsFirebase.updateProfile(profile.id.toString(), {
+        installments: profile.installments
+      })
+
+      loading.value = false
+      return invoice
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
   // Receipt Generation
-  function generateReceipt(payment: PaymentRecord) {
-    const receipt: Receipt = {
-      id: Date.now(),
+  async function generateReceipt(payment: PaymentRecord) {
+    const receipt: Omit<Receipt, 'id'> = {
       receiptNumber: payment.receiptNumber,
       studentId: payment.studentId,
       installmentID: payment.installmentID,
@@ -385,14 +488,18 @@ export const useInstallmentsStore = defineStore('installments', () => {
       collectedBy: payment.collectedBy
     }
 
-    receipts.value.push(receipt)
-    saveToLocalStorage()
-    return receipt
+    try {
+      await installmentsFirebase.createReceipt(receipt)
+      return receipt
+    } catch (err: any) {
+      console.error('Failed to generate receipt:', err)
+      throw err
+    }
   }
 
   // Late Fee Calculation
-  function calculateLateFee(installmentID: string, studentId: number) {
-    const profile = studentFeeProfiles.value.find(p => p.studentId === studentId)
+  function calculateLateFee(installmentID: string, studentId: number | string) {
+    const profile = studentFeeProfiles.value.find(p => p.studentId == studentId)
     if (!profile) return 0
 
     const installment = profile.installments.find(i => i.installmentID === installmentID)
@@ -428,12 +535,13 @@ export const useInstallmentsStore = defineStore('installments', () => {
     return lateFee
   }
 
-  function applyLateFees() {
-    const today = new Date().toISOString().split('T')[0]
+  async function applyLateFees() {
+    const today = new Date().toISOString().split('T')[0] || ''
 
-    studentFeeProfiles.value.forEach(profile => {
+    for (const profile of studentFeeProfiles.value) {
+      let updated = false
       profile.installments.forEach(installment => {
-        if (installment.status !== 'paid' && installment.dueDate < today) {
+        if (installment.status !== 'paid' && (installment.dueDate || '') < today) {
           const lateFee = calculateLateFee(installment.installmentID, profile.studentId)
           if (lateFee > 0 && installment.lateFee !== lateFee) {
             installment.lateFee = lateFee
@@ -441,6 +549,7 @@ export const useInstallmentsStore = defineStore('installments', () => {
             installment.status = 'overdue'
             profile.totalLateFee += lateFee
             profile.totalRemaining += lateFee
+            updated = true
           }
         }
       })
@@ -449,15 +558,27 @@ export const useInstallmentsStore = defineStore('installments', () => {
       const hasOverdue = profile.installments.some(i => i.status === 'overdue')
       if (hasOverdue && profile.status !== 'completed') {
         profile.status = 'defaulter'
+        updated = true
       }
-    })
 
-    saveToLocalStorage()
+      if (updated && profile.id) {
+        try {
+          await installmentsFirebase.updateProfile(profile.id.toString(), {
+            installments: profile.installments,
+            totalLateFee: profile.totalLateFee,
+            totalRemaining: profile.totalRemaining,
+            status: profile.status
+          })
+        } catch (err) {
+          console.error('Failed to update late fees for profile:', profile.id, err)
+        }
+      }
+    }
   }
 
   // Discount Application
-  function applyDiscount(studentId: number, installmentID: string, discount: number, reason: string) {
-    const profile = studentFeeProfiles.value.find(p => p.studentId === studentId)
+  async function applyDiscount(studentId: number | string, installmentID: string, discount: number, reason: string) {
+    const profile = studentFeeProfiles.value.find(p => p.studentId == studentId)
     if (!profile) return false
 
     const installment = profile.installments.find(i => i.installmentID === installmentID)
@@ -468,35 +589,47 @@ export const useInstallmentsStore = defineStore('installments', () => {
     profile.totalDiscount += discount
     profile.totalRemaining -= discount
 
-    saveToLocalStorage()
-    return true
+    try {
+      await installmentsFirebase.updateProfile(profile.id.toString(), {
+        installments: profile.installments,
+        totalDiscount: profile.totalDiscount,
+        totalRemaining: profile.totalRemaining
+      })
+      return true
+    } catch (err) {
+      console.error('Failed to apply discount:', err)
+      return false
+    }
   }
 
   // Notification System
-  function sendNotification(notification: Omit<FeeNotification, 'id' | 'sentDate' | 'status'>) {
-    const newNotification: FeeNotification = {
+  async function sendNotification(notification: Omit<FeeNotification, 'id' | 'sentDate' | 'status'>) {
+    const newNotification: Omit<FeeNotification, 'id'> = {
       ...notification,
-      id: Date.now(),
       sentDate: new Date().toISOString(),
       status: 'sent'
     }
 
-    notifications.value.push(newNotification)
-    saveToLocalStorage()
-    return newNotification
+    try {
+      await installmentsFirebase.createNotification(newNotification)
+      return newNotification
+    } catch (err) {
+      console.error('Failed to send notification:', err)
+      throw err
+    }
   }
 
-  function sendDueReminders() {
+  async function sendDueReminders() {
     const today = new Date()
     const reminderDate = new Date(today)
     reminderDate.setDate(reminderDate.getDate() + 3) // 3 days before due
 
-    studentFeeProfiles.value.forEach(profile => {
-      profile.installments.forEach(installment => {
+    for (const profile of studentFeeProfiles.value) {
+      for (const installment of profile.installments) {
         if (installment.status === 'pending' || installment.status === 'partial') {
           const dueDate = new Date(installment.dueDate)
           if (dueDate <= reminderDate && dueDate >= today) {
-            sendNotification({
+            await sendNotification({
               studentId: profile.studentId,
               type: 'due-reminder',
               message: `Reminder: ${installment.title} of ₹${installment.remainingAmount} is due on ${installment.dueDate}`,
@@ -504,19 +637,19 @@ export const useInstallmentsStore = defineStore('installments', () => {
             })
           }
         }
-      })
-    })
+      }
+    }
   }
 
-  function sendOverdueAlerts() {
-    overdueInstallments.value.forEach(installment => {
-      sendNotification({
+  async function sendOverdueAlerts() {
+    for (const installment of overdueInstallments.value) {
+      await sendNotification({
         studentId: installment.studentId,
         type: 'overdue-alert',
         message: `Alert: ${installment.title} is overdue. Please pay ₹${installment.remainingAmount} immediately.`,
         channel: 'sms'
       })
-    })
+    }
   }
 
   // Analytics & Reporting
@@ -639,30 +772,17 @@ export const useInstallmentsStore = defineStore('installments', () => {
     return csv
   }
 
-  // Persistence
-  function saveToLocalStorage() {
-    localStorage.setItem('installmentPlans', JSON.stringify(plans.value))
-    localStorage.setItem('studentFeeProfiles', JSON.stringify(studentFeeProfiles.value))
-    localStorage.setItem('feePayments', JSON.stringify(payments.value))
-    localStorage.setItem('feeInvoices', JSON.stringify(invoices.value))
-    localStorage.setItem('feeReceipts', JSON.stringify(receipts.value))
-    localStorage.setItem('feeNotifications', JSON.stringify(notifications.value))
+  function loadFromLocalStorage() {
+    console.warn('loadFromLocalStorage is deprecated for Installments. Use initialize() instead.')
   }
 
-  function loadFromLocalStorage() {
-    const savedPlans = localStorage.getItem('installmentPlans')
-    const savedProfiles = localStorage.getItem('studentFeeProfiles')
-    const savedPayments = localStorage.getItem('feePayments')
-    const savedInvoices = localStorage.getItem('feeInvoices')
-    const savedReceipts = localStorage.getItem('feeReceipts')
-    const savedNotifications = localStorage.getItem('feeNotifications')
-
-    if (savedPlans) plans.value = JSON.parse(savedPlans)
-    if (savedProfiles) studentFeeProfiles.value = JSON.parse(savedProfiles)
-    if (savedPayments) payments.value = JSON.parse(savedPayments)
-    if (savedInvoices) invoices.value = JSON.parse(savedInvoices)
-    if (savedReceipts) receipts.value = JSON.parse(savedReceipts)
-    if (savedNotifications) notifications.value = JSON.parse(savedNotifications)
+  function cleanup() {
+    if (plansUnsubscribe) plansUnsubscribe()
+    if (profilesUnsubscribe) profilesUnsubscribe()
+    if (paymentsUnsubscribe) paymentsUnsubscribe()
+    if (invoicesUnsubscribe) invoicesUnsubscribe()
+    if (receiptsUnsubscribe) receiptsUnsubscribe()
+    if (notificationsUnsubscribe) notificationsUnsubscribe()
   }
 
   return {
@@ -673,6 +793,8 @@ export const useInstallmentsStore = defineStore('installments', () => {
     invoices,
     receipts,
     notifications,
+    loading,
+    error,
 
     // Computed
     activePlans,
@@ -680,6 +802,9 @@ export const useInstallmentsStore = defineStore('installments', () => {
     totalPending,
     overdueInstallments,
     defaulters,
+
+    // Initialization
+    initialize,
 
     // Plan Management
     createPlan,
@@ -721,6 +846,8 @@ export const useInstallmentsStore = defineStore('installments', () => {
     exportToCSV,
 
     // Persistence
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

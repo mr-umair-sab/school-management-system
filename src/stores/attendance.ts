@@ -1,36 +1,55 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Attendance } from '@/types'
+import * as attendanceFirebase from '@/services/attendanceFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useAttendanceStore = defineStore('attendance', () => {
   const attendanceRecords = ref<Attendance[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let unsubscribe: Unsubscribe | null = null
 
   const todayAttendance = computed(() => {
     const today = new Date().toISOString().split('T')[0]
     return attendanceRecords.value.filter(a => a.date === today)
   })
 
-  function markAttendance(attendance: Omit<Attendance, 'id'>) {
-    const existing = attendanceRecords.value.findIndex(
-      a => a.date === attendance.date &&
-           a.class === attendance.class &&
-           a.section === attendance.section
-    )
+  async function initialize() {
+    try {
+      loading.value = true
 
-    if (existing !== -1) {
-      const existingRecord = attendanceRecords.value[existing]
-      if (existingRecord) {
-        attendanceRecords.value[existing] = { ...attendance, id: existingRecord.id }
-      }
-    } else {
-      attendanceRecords.value.push({ ...attendance, id: Date.now() })
+      // Subscribe to all attendance records (or filter by current academic year/session if needed)
+      // For now, subscribing to all to match previous behavior
+      unsubscribe = attendanceFirebase.subscribeToAttendance((records) => {
+        attendanceRecords.value = records
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize attendance store:', err)
     }
-    saveToLocalStorage()
   }
 
-  function getAttendanceByStudent(studentId: number, startDate?: string, endDate?: string) {
+  async function markAttendance(attendance: Omit<Attendance, 'id'>) {
+    try {
+      loading.value = true
+      await attendanceFirebase.markAttendance(attendance)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  function getAttendanceByStudent(studentId: string | number, startDate?: string, endDate?: string) {
     return attendanceRecords.value.filter(a => {
-      const hasStudent = a.records.some(r => r.studentId === studentId)
+      // Handle both string and number IDs
+      const hasStudent = a.records.some(r => r.studentId == studentId)
       if (!startDate || !endDate) return hasStudent
       return hasStudent && a.date >= startDate && a.date <= endDate
     })
@@ -42,7 +61,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     )
   }
 
-  function calculateAttendancePercentage(studentId: number, days: number = 30) {
+  function calculateAttendancePercentage(studentId: string | number, days: number = 30) {
     const endDate = new Date()
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
@@ -57,7 +76,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     let total = 0
 
     records.forEach(attendance => {
-      const record = attendance.records.find(r => r.studentId === studentId)
+      const record = attendance.records.find(r => r.studentId == studentId)
       if (record) {
         total++
         if (record.status === 'present' || record.status === 'late') present++
@@ -68,22 +87,26 @@ export const useAttendanceStore = defineStore('attendance', () => {
     return total > 0 ? (present / total) * 100 : 0
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('attendance', JSON.stringify(attendanceRecords.value))
+  function loadFromLocalStorage() {
+    console.warn('loadFromLocalStorage is deprecated for Attendance. Use initialize() instead.')
   }
 
-  function loadFromLocalStorage() {
-    const saved = localStorage.getItem('attendance')
-    if (saved) attendanceRecords.value = JSON.parse(saved)
+  function cleanup() {
+    if (unsubscribe) unsubscribe()
   }
 
   return {
     attendanceRecords,
     todayAttendance,
+    loading,
+    error,
+    initialize,
     markAttendance,
     getAttendanceByStudent,
     getAttendanceByClass,
     calculateAttendancePercentage,
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

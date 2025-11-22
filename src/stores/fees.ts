@@ -1,10 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { FeeStructure, FeeRecord, Payment } from '@/types'
+import * as feesFirebase from '@/services/feesFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useFeesStore = defineStore('fees', () => {
   const feeStructures = ref<FeeStructure[]>([])
   const feeRecords = ref<FeeRecord[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let structuresUnsubscribe: Unsubscribe | null = null
+  let recordsUnsubscribe: Unsubscribe | null = null
 
   const totalCollected = computed(() =>
     feeRecords.value.reduce((sum, record) => sum + record.paidAmount, 0)
@@ -18,43 +25,101 @@ export const useFeesStore = defineStore('fees', () => {
     feeRecords.value.filter(r => r.status === 'overdue')
   )
 
-  function addFeeStructure(structure: Omit<FeeStructure, 'id'>) {
-    feeStructures.value.push({ ...structure, id: Date.now() })
-    saveToLocalStorage()
-  }
+  async function initialize() {
+    try {
+      loading.value = true
 
-  function addFeeRecord(record: Omit<FeeRecord, 'id'>) {
-    feeRecords.value.push({ ...record, id: Date.now() })
-    saveToLocalStorage()
-  }
+      // Subscribe to Fee Structures
+      structuresUnsubscribe = feesFirebase.subscribeToFeeStructures((structures) => {
+        feeStructures.value = structures
+      })
 
-  function addPayment(recordId: number, payment: Omit<Payment, 'id'>) {
-    const record = feeRecords.value.find(r => r.id === recordId)
-    if (record) {
-      const newPayment = { ...payment, id: Date.now() }
-      record.payments.push(newPayment)
-      record.paidAmount += payment.amount
-      record.pendingAmount -= payment.amount
-      record.status = record.pendingAmount === 0 ? 'paid' :
-                     record.pendingAmount < record.totalFee ? 'partial' : 'pending'
-      saveToLocalStorage()
+      // Subscribe to Fee Records
+      recordsUnsubscribe = feesFirebase.subscribeToFeeRecords((records) => {
+        feeRecords.value = records
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize fees store:', err)
     }
   }
 
-  function getFeeRecordByStudent(studentId: number) {
-    return feeRecords.value.filter(r => r.studentId === studentId)
+  async function addFeeStructure(structure: Omit<FeeStructure, 'id'>) {
+    try {
+      loading.value = true
+      await feesFirebase.createFeeStructure(structure)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('feeStructures', JSON.stringify(feeStructures.value))
-    localStorage.setItem('feeRecords', JSON.stringify(feeRecords.value))
+  async function updateFeeStructure(id: string, data: Partial<FeeStructure>) {
+    try {
+      loading.value = true
+      await feesFirebase.updateFeeStructure(id, data)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function deleteFeeStructure(id: string) {
+    try {
+      loading.value = true
+      await feesFirebase.deleteFeeStructure(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function addFeeRecord(record: Omit<FeeRecord, 'id'>) {
+    try {
+      loading.value = true
+      await feesFirebase.createFeeRecord(record)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  async function addPayment(recordId: string, payment: Omit<Payment, 'id'>) {
+    try {
+      loading.value = true
+      await feesFirebase.addPayment(recordId, payment)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
+  }
+
+  function getFeeRecordByStudent(studentId: string | number) {
+    // Handle both string and number IDs for compatibility
+    return feeRecords.value.filter(r => r.studentId == studentId)
   }
 
   function loadFromLocalStorage() {
-    const structures = localStorage.getItem('feeStructures')
-    const records = localStorage.getItem('feeRecords')
-    if (structures) feeStructures.value = JSON.parse(structures)
-    if (records) feeRecords.value = JSON.parse(records)
+    // Fallback or migration logic if needed
+    console.warn('loadFromLocalStorage is deprecated for Fees. Use initialize() instead.')
+  }
+
+  function cleanup() {
+    if (structuresUnsubscribe) structuresUnsubscribe()
+    if (recordsUnsubscribe) recordsUnsubscribe()
   }
 
   return {
@@ -63,10 +128,17 @@ export const useFeesStore = defineStore('fees', () => {
     totalCollected,
     totalPending,
     overdueRecords,
+    loading,
+    error,
+    initialize,
     addFeeStructure,
+    updateFeeStructure,
+    deleteFeeStructure,
     addFeeRecord,
     addPayment,
     getFeeRecordByStudent,
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+

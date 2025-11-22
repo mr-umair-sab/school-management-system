@@ -1,86 +1,146 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Exam, Result } from '@/types'
+import * as examsFirebase from '@/services/examsFirebase'
+import type { Unsubscribe } from 'firebase/firestore'
 
 export const useExamsStore = defineStore('exams', () => {
   const exams = ref<Exam[]>([])
   const results = ref<Result[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  let examsUnsubscribe: Unsubscribe | null = null
+  let resultsUnsubscribe: Unsubscribe | null = null
 
   const upcomingExams = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] || ''
     return exams.value.filter(e => e.startDate >= today).sort((a, b) =>
       a.startDate.localeCompare(b.startDate)
     )
   })
 
   const completedExams = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] || ''
     return exams.value.filter(e => e.endDate < today)
   })
 
-  function addExam(exam: Omit<Exam, 'id'>) {
-    exams.value.push({ ...exam, id: Date.now() })
-    saveToLocalStorage()
-  }
+  async function initialize() {
+    try {
+      loading.value = true
 
-  function updateExam(id: number, exam: Partial<Exam>) {
-    const index = exams.value.findIndex(e => e.id === id)
-    if (index !== -1) {
-      exams.value[index] = { ...exams.value[index], ...exam } as Exam
-      saveToLocalStorage()
+      examsUnsubscribe = examsFirebase.subscribeToExams((data) => {
+        exams.value = data
+      })
+
+      resultsUnsubscribe = examsFirebase.subscribeToResults((data) => {
+        results.value = data
+      })
+
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      console.error('Failed to initialize exams store:', err)
     }
   }
 
-  function deleteExam(id: number) {
-    exams.value = exams.value.filter(e => e.id !== id)
-    results.value = results.value.filter(r => r.examId !== id)
-    saveToLocalStorage()
-  }
-
-  function addResult(result: Omit<Result, 'id'>) {
-    const existing = results.value.findIndex(
-      r => r.examId === result.examId && r.studentId === result.studentId
-    )
-
-    if (existing !== -1) {
-      results.value[existing] = { ...result, id: results.value[existing].id }
-    } else {
-      results.value.push({ ...result, id: Date.now() })
+  async function addExam(exam: Omit<Exam, 'id'>) {
+    try {
+      loading.value = true
+      await examsFirebase.createExam(exam)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
     }
-    saveToLocalStorage()
   }
 
-  function getResultsByStudent(studentId: number) {
-    return results.value.filter(r => r.studentId === studentId)
+  async function updateExam(id: string, exam: Partial<Exam>) {
+    try {
+      loading.value = true
+      await examsFirebase.updateExam(id, exam)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function getResultsByExam(examId: number) {
-    return results.value.filter(r => r.examId === examId)
+  async function deleteExam(id: string) {
+    try {
+      loading.value = true
+      await examsFirebase.deleteExam(id)
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function calculateRanks(examId: number) {
-    const examResults = getResultsByExam(examId)
-    const sorted = [...examResults].sort((a, b) => b.percentage - a.percentage)
+  async function addResult(result: Omit<Result, 'id'>) {
+    try {
+      loading.value = true
+      // Check if result exists for this student and exam
+      const existing = results.value.find(
+        r => r.examId == result.examId && r.studentId == result.studentId
+      )
 
-    sorted.forEach((result, index) => {
-      const resultIndex = results.value.findIndex(r => r.id === result.id)
-      if (resultIndex !== -1) {
-        results.value[resultIndex].rank = index + 1
+      if (existing) {
+        await examsFirebase.updateResult(existing.id.toString(), result)
+      } else {
+        await examsFirebase.createResult(result)
       }
-    })
-    saveToLocalStorage()
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('exams', JSON.stringify(exams.value))
-    localStorage.setItem('results', JSON.stringify(results.value))
+  function getResultsByStudent(studentId: string | number) {
+    return results.value.filter(r => r.studentId == studentId)
+  }
+
+  function getResultsByExam(examId: string | number) {
+    return results.value.filter(r => r.examId == examId)
+  }
+
+  async function calculateRanks(examId: string | number) {
+    // This logic might need to be moved to a Cloud Function for scalability,
+    // but for now we can do it client-side and update results.
+    try {
+      loading.value = true
+      const examResults = getResultsByExam(examId)
+      const sorted = [...examResults].sort((a, b) => b.percentage - a.percentage)
+
+      // Update ranks in Firebase
+      // Note: This will trigger multiple writes. In a real app, use a batch write.
+      for (let i = 0; i < sorted.length; i++) {
+        const result = sorted[i]
+        if (result && result.rank !== i + 1) {
+          await examsFirebase.updateResult(result.id.toString(), { rank: i + 1 })
+        }
+      }
+      loading.value = false
+    } catch (err: any) {
+      error.value = err.message
+      loading.value = false
+      throw err
+    }
   }
 
   function loadFromLocalStorage() {
-    const savedExams = localStorage.getItem('exams')
-    const savedResults = localStorage.getItem('results')
-    if (savedExams) exams.value = JSON.parse(savedExams)
-    if (savedResults) results.value = JSON.parse(savedResults)
+    console.warn('loadFromLocalStorage is deprecated for Exams. Use initialize() instead.')
+  }
+
+  function cleanup() {
+    if (examsUnsubscribe) examsUnsubscribe()
+    if (resultsUnsubscribe) resultsUnsubscribe()
   }
 
   return {
@@ -88,6 +148,9 @@ export const useExamsStore = defineStore('exams', () => {
     results,
     upcomingExams,
     completedExams,
+    loading,
+    error,
+    initialize,
     addExam,
     updateExam,
     deleteExam,
@@ -95,6 +158,8 @@ export const useExamsStore = defineStore('exams', () => {
     getResultsByStudent,
     getResultsByExam,
     calculateRanks,
-    loadFromLocalStorage
+    loadFromLocalStorage,
+    cleanup
   }
 })
+
