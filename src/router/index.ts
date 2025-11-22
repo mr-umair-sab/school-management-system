@@ -149,6 +149,12 @@ const router = createRouter({
       name: 'assignment-management',
       component: () => import('@/views/AssignmentManagementView.vue'),
       meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
+      path: '/events-management',
+      name: 'events-management',
+      component: () => import('@/views/EventsManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
     }
   ]
 })
