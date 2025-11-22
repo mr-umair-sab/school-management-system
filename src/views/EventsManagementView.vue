@@ -2,6 +2,14 @@
   <div class="bg-gray-100 min-h-screen">
     <Navbar page-title="Events & Activities Management - Advanced" />
     
+    <!-- Toast Notification -->
+    <div v-if="showToast" class="fixed top-20 right-4 z-50 transition-all duration-300">
+      <div :class="toastType === 'success' ? 'bg-green-500' : 'bg-red-500'" class="text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px]">
+        <span class="text-2xl">{{ toastType === 'success' ? '✅' : '❌' }}</span>
+        <span class="font-semibold">{{ toastMessage }}</span>
+      </div>
+    </div>
+    
     <div class="p-6">
       <!-- Quick Actions -->
       <div class="bg-white rounded-2xl shadow-lg p-4 mb-6">
@@ -838,6 +846,20 @@ const showSchedulePTM = ref(false)
 const showUploadMedia = ref(false)
 const showGenerateCertificate = ref(false)
 
+// Toast Notification
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+function showToastMessage(message: string, type: 'success' | 'error' = 'success') {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
+
 // Form Data
 const newEvent = ref({
   title: '',
@@ -1023,6 +1045,7 @@ async function handleCreateEvent() {
   try {
     await eventsStore.addEvent(newEvent.value)
     showCreateEvent.value = false
+    showToastMessage('Event created successfully!', 'success')
     newEvent.value = {
       title: '',
       description: '',
@@ -1035,7 +1058,7 @@ async function handleCreateEvent() {
       icon: '🎉'
     }
   } catch (err) {
-    alert('Failed to create event')
+    showToastMessage('Failed to create event', 'error')
   }
 }
 
@@ -1043,8 +1066,9 @@ async function handleDeleteEvent(id: string | number) {
   if (confirm('Are you sure you want to delete this event?')) {
     try {
       await eventsStore.deleteEvent(id.toString())
+      showToastMessage('Event deleted successfully!', 'success')
     } catch (err) {
-      alert('Failed to delete event')
+      showToastMessage('Failed to delete event', 'error')
     }
   }
 }
@@ -1053,6 +1077,7 @@ async function handleCreateCompetition() {
   try {
     await eventsStore.addCompetition(newCompetition.value)
     showCreateCompetition.value = false
+    showToastMessage('Competition created successfully!', 'success')
     newCompetition.value = {
       title: '',
       type: '',
@@ -1064,7 +1089,7 @@ async function handleCreateCompetition() {
       venue: ''
     }
   } catch (err) {
-    alert('Failed to create competition')
+    showToastMessage('Failed to create competition', 'error')
   }
 }
 
@@ -1072,6 +1097,7 @@ async function handleCreateTrip() {
   try {
     await eventsStore.addTrip(newTrip.value)
     showCreateTrip.value = false
+    showToastMessage('Trip created successfully!', 'success')
     newTrip.value = {
       title: '',
       destination: '',
@@ -1086,7 +1112,7 @@ async function handleCreateTrip() {
       status: 'pending'
     }
   } catch (err) {
-    alert('Failed to create trip')
+    showToastMessage('Failed to create trip', 'error')
   }
 }
 
@@ -1094,6 +1120,7 @@ async function handleSchedulePTM() {
   try {
     await eventsStore.addPTM(newPTM.value)
     showSchedulePTM.value = false
+    showToastMessage('PTM scheduled successfully!', 'success')
     newPTM.value = {
       title: '',
       class: '',
@@ -1105,7 +1132,7 @@ async function handleSchedulePTM() {
       status: 'scheduled'
     }
   } catch (err) {
-    alert('Failed to schedule PTM')
+    showToastMessage('Failed to schedule PTM', 'error')
   }
 }
 
@@ -1113,6 +1140,7 @@ async function handleUploadMedia() {
   try {
     await eventsStore.addGalleryMedia(newMedia.value)
     showUploadMedia.value = false
+    showToastMessage('Media uploaded successfully!', 'success')
     newMedia.value = {
       title: '',
       event: '',
@@ -1122,7 +1150,7 @@ async function handleUploadMedia() {
       uploadDate: ''
     }
   } catch (err) {
-    alert('Failed to upload media')
+    showToastMessage('Failed to upload media', 'error')
   }
 }
 
@@ -1130,6 +1158,7 @@ async function handleGenerateCertificate() {
   try {
     await eventsStore.addCertificate(newCertificate.value)
     showGenerateCertificate.value = false
+    showToastMessage('Certificate generated successfully!', 'success')
     newCertificate.value = {
       studentName: '',
       award: '',
@@ -1138,7 +1167,7 @@ async function handleGenerateCertificate() {
       delivered: false
     }
   } catch (err) {
-    alert('Failed to generate certificate')
+    showToastMessage('Failed to generate certificate', 'error')
   }
 }
 
