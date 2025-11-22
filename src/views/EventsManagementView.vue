@@ -569,8 +569,8 @@
               <input v-model="newEvent.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Time</label>
-              <input v-model="newEvent.time" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" placeholder="9:00 AM - 5:00 PM">
+              <label class="block text-sm font-medium text-gray-700">Start Time</label>
+              <input v-model="newEvent.time" type="time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Venue</label>
