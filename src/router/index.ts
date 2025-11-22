@@ -143,6 +143,12 @@ const router = createRouter({
       name: 'communication',
       component: () => import('@/views/CommunicationView.vue'),
       meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
+      path: '/assignment-management',
+      name: 'assignment-management',
+      component: () => import('@/views/AssignmentManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
     }
   ]
 })

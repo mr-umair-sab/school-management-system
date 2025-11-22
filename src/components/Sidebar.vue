@@ -45,6 +45,7 @@ const allMenuItems = [
   { path: '/transport', label: 'Transport', icon: '🚌', roles: ['admin'] },
   { path: '/hostel', label: 'Hostel Management', icon: '🏢', roles: ['admin'] },
   { path: '/communication', label: 'Communication', icon: '💬', roles: ['admin', 'teacher'] },
+  { path: '/assignment-management', label: 'Assignment Management', icon: '📋', roles: ['admin', 'teacher'] },
   { path: '/events', label: 'Events', icon: '🎉', roles: ['admin', 'teacher'] },
   { path: '/notices', label: 'Notices', icon: '📢', roles: ['admin', 'teacher'] },
   { path: '/reports', label: 'Reports', icon: '📊', roles: ['admin', 'teacher'] },
