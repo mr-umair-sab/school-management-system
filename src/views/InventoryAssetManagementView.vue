@@ -103,7 +103,7 @@
           <h3 class="text-xl font-bold">📋 Asset Registry</h3>
           <div class="flex gap-2">
             <input v-model="searchQuery" type="text" placeholder="Search assets..." 
-                   class="px-4 py-2 border-2 rounded-lg focus:outline-none focus:border-blue-500">
+                   class=" py-2 border-2 rounded-lg focus:outline-none focus:border-blue-500">
             <button @click="scanBarcode" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
               📷 Scan QR
             </button>
