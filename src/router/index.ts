@@ -155,6 +155,12 @@ const router = createRouter({
       name: 'events-management',
       component: () => import('@/views/EventsManagementView.vue'),
       meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
+    },
+    {
+      path: '/inventory-asset-management',
+      name: 'inventory-asset-management',
+      component: () => import('@/views/InventoryAssetManagementView.vue'),
+      meta: { requiresAuth: true, roles: ['admin', 'teacher'] }
     }
   ]
 })

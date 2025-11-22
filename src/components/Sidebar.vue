@@ -48,6 +48,7 @@ const allMenuItems = [
   { path: '/assignment-management', label: 'Assignment Management', icon: '📋', roles: ['admin', 'teacher'] },
   // { path: '/events', label: 'Events', icon: '🎉', roles: ['admin', 'teacher'] },
   { path: '/events-management', label: 'Events Management', icon: '🎊', roles: ['admin', 'teacher'] },
+  { path: '/inventory-asset-management', label: 'Inventory & Assets', icon: '📦', roles: ['admin'] },
   { path: '/notices', label: 'Notices', icon: '📢', roles: ['admin', 'teacher'] },
   { path: '/reports', label: 'Reports', icon: '📊', roles: ['admin', 'teacher'] },
   { path: '/parent-portal', label: 'Parent Portal', icon: '👪', roles: ['parent'] },
