@@ -789,6 +789,126 @@
       </div>
     </div>
 
+    <!-- View Event Details Modal -->
+    <div v-if="showEventDetails && selectedEvent" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-2xl font-bold">{{ selectedEvent.icon || '🎉' }} Event Details</h3>
+          <button @click="showEventDetails = false" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm font-semibold text-gray-600">Title</label>
+            <p class="text-lg font-bold">{{ selectedEvent.title }}</p>
+          </div>
+          
+          <div>
+            <label class="text-sm font-semibold text-gray-600">Description</label>
+            <p class="text-gray-700">{{ selectedEvent.description }}</p>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Date</label>
+              <p class="text-gray-700">📅 {{ selectedEvent.date }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Time</label>
+              <p class="text-gray-700">🕐 {{ selectedEvent.time }}</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Venue</label>
+              <p class="text-gray-700">📍 {{ selectedEvent.venue }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Organizer</label>
+              <p class="text-gray-700">👥 {{ selectedEvent.organizer }}</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Category</label>
+              <p class="text-gray-700 capitalize">{{ selectedEvent.category }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600">Status</label>
+              <span :class="getEventStatusBadge(selectedEvent.status)" class="px-3 py-1 rounded-full text-sm">
+                {{ selectedEvent.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showEventDetails = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
+          <button @click="editEvent(selectedEvent); showEventDetails = false" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit Event</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div v-if="showEditEvent" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">Edit Event</h3>
+        <form @submit.prevent="handleUpdateEvent" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Event Title</label>
+              <input v-model="editingEvent.title" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Description</label>
+              <textarea v-model="editingEvent.description" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" rows="3"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Date</label>
+              <input v-model="editingEvent.date" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Start Time</label>
+              <input v-model="editingEvent.time" type="time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Venue</label>
+              <input v-model="editingEvent.venue" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Organizer</label>
+              <input v-model="editingEvent.organizer" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Category</label>
+              <select v-model="editingEvent.category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option value="academic">Academic</option>
+                <option value="sports">Sports</option>
+                <option value="cultural">Cultural</option>
+                <option value="admin">Administrative</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Status</label>
+              <select v-model="editingEvent.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showEditEvent = false" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -845,6 +965,23 @@ const showCreateTrip = ref(false)
 const showSchedulePTM = ref(false)
 const showUploadMedia = ref(false)
 const showGenerateCertificate = ref(false)
+
+// View/Edit Modals
+const showEventDetails = ref(false)
+const showEditEvent = ref(false)
+const selectedEvent = ref<Event | null>(null)
+const editingEvent = ref({
+  id: '',
+  title: '',
+  description: '',
+  date: '',
+  time: '',
+  venue: '',
+  organizer: '',
+  category: 'academic' as 'academic' | 'sports' | 'cultural' | 'admin' | 'other',
+  status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed' | 'cancelled',
+  icon: '🎉'
+})
 
 // Toast Notification
 const showToast = ref(false)
@@ -1172,11 +1309,34 @@ async function handleGenerateCertificate() {
 }
 
 function viewEventDetails(event: any) {
-  console.log('Viewing event:', event)
+  selectedEvent.value = event
+  showEventDetails.value = true
 }
 
 function editEvent(event: any) {
-  console.log('Editing event:', event)
+  editingEvent.value = {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    date: event.date,
+    time: event.time,
+    venue: event.venue,
+    organizer: event.organizer,
+    category: event.category,
+    status: event.status,
+    icon: event.icon || '🎉'
+  }
+  showEditEvent.value = true
+}
+
+async function handleUpdateEvent() {
+  try {
+    await eventsStore.updateEvent(editingEvent.value.id, editingEvent.value)
+    showEditEvent.value = false
+    showToastMessage('Event updated successfully!', 'success')
+  } catch (err) {
+    showToastMessage('Failed to update event', 'error')
+  }
 }
 
 function viewLeaderboard(comp: any) {
