@@ -661,7 +661,7 @@ const affectedPeriods = ref([
   { id: 3, class: 'Grade 9-A', period: 5, subject: 'Mathematics', time: '11:15-12:00' }
 ])
 
-const suggestedSubstitutes = ref([])
+const suggestedSubstitutes = ref<any[]>([])
 
 const timetableHistory = ref([
   { id: 1, name: 'Timetable v1.0', date: '2024-01-15', createdBy: 'Admin' },

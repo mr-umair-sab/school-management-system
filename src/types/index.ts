@@ -75,9 +75,9 @@ export interface Class {
   id: number | string
   name: string
   section: string
-  classTeacher: number // teacher id
-  subjects: number[] // subject ids
-  students: number[] // student ids
+  classTeacher: number | string // teacher id
+  subjects: (number | string)[] // subject ids
+  students: (number | string)[] // student ids
   capacity: number
 }
 
@@ -86,7 +86,7 @@ export interface Subject {
   name: string
   code: string
   class: string
-  teacher: number // teacher id
+  teacher: number | string // teacher id
   credits: number
 }
 
@@ -102,8 +102,8 @@ export interface Period {
   periodNumber: number
   startTime: string
   endTime: string
-  subject: number // subject id
-  teacher: number // teacher id
+  subject: number | string // subject id
+  teacher: number | string // teacher id
   room: string
 }
 
@@ -116,7 +116,7 @@ export interface Attendance {
 }
 
 export interface AttendanceRecord {
-  studentId: number
+  studentId: number | string
   status: 'present' | 'absent' | 'late' | 'half-day'
   remarks?: string
 }
