@@ -1,6 +1,15 @@
 <template>
   <div class="bg-gray-100 min-h-screen">
     <Navbar page-title="Assignment & Homework Management System" />
+    
+    <!-- Toast Notification -->
+    <div v-if="showToast" class="fixed top-20 right-4 z-50 transition-all duration-300">
+      <div :class="toastType === 'success' ? 'bg-green-500' : 'bg-red-500'" class="text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px]">
+        <span class="text-2xl">{{ toastType === 'success' ? '✅' : '❌' }}</span>
+        <span class="font-semibold">{{ toastMessage }}</span>
+      </div>
+    </div>
+
     <div class="p-6">
       <!-- Quick Actions -->
       <div class="bg-white rounded-2xl shadow-lg p-4 mb-6">
@@ -121,8 +130,8 @@
                 <td class="border p-3 text-center">{{ assignment.dueDate }}</td>
                 <td class="border p-3 text-center font-bold">{{ assignment.totalMarks }}</td>
                 <td class="border p-3 text-center">
-                  <span class="font-bold" :class="assignment.submittedCount >= assignment.totalStudents * 0.8 ? 'text-green-600' : 'text-red-600'">
-                    {{ assignment.submittedCount }}/{{ assignment.totalStudents }}
+                  <span class="font-bold text-gray-600">
+                    - / -
                   </span>
                 </td>
                 <td class="border p-3 text-center">
@@ -135,6 +144,9 @@
                     </button>
                     <button @click="duplicateAssignment(assignment)" class="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-xs">
                       📋
+                    </button>
+                    <button @click="handleDeleteAssignment(assignment.id)" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs">
+                      🗑️
                     </button>
                   </div>
                 </td>
@@ -182,7 +194,7 @@
                 </td>
                 <td class="border p-3 text-center">
                   <button class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs">
-                    📎 {{ submission.fileCount }} files
+                    📎 {{ submission.files.length }} files
                   </button>
                 </td>
                 <td class="border p-3 text-center">
@@ -495,12 +507,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import Navbar from '@/components/Navbar.vue'
+import { 
+  createHomework, 
+  subscribeToHomework, 
+  deleteHomework, 
+  subscribeToSubmissions, 
+  gradeSubmission 
+} from '@/services/homeworkFirebase'
+import type { Homework, AssignmentSubmission } from '@/types'
 
 const activeTab = ref('assignments')
 const showCreateAssignment = ref(false)
 const showAIChecker = ref(false)
+const isLoading = ref(false)
+
+// Toast Notification
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+
+function showToastMessage(message: string, type: 'success' | 'error' = 'success') {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
 
 // Tabs
 const tabs = [
@@ -510,89 +545,30 @@ const tabs = [
   { id: 'analytics', label: '📊 Analytics' }
 ]
 
-// Stats
-const totalAssignments = ref(156)
-const submittedCount = ref(1245)
-const pendingCount = ref(234)
-const lateSubmissions = ref(45)
-const avgCompletionRate = ref(84)
-const avgMarks = ref(78)
+// Data
+const assignments = ref<Homework[]>([])
+const submissions = ref<AssignmentSubmission[]>([])
+const selectedAssignmentForReview = ref('')
 
 // Filters
 const filterSubject = ref('')
 const filterClass = ref('')
-const selectedAssignmentForReview = ref('')
-
-const subjects = ['Mathematics', 'English', 'Science', 'Urdu', 'Islamiat', 'Social Studies']
+const subjects = ['Mathematics', 'English', 'Science', 'Urdu', 'Islamiat', 'Social Studies', 'Computer Science', 'History', 'Geography']
 const classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10']
 
-// Assignments Data
-const assignments = ref([
-  { id: 1, title: 'Chapter 5 Exercise 5.1', description: 'Complete all questions', subject: 'Mathematics', class: 'Class 10', category: 'Homework', difficulty: 'Medium', dueDate: '2024-11-25', totalMarks: 20, submittedCount: 35, totalStudents: 45 },
-  { id: 2, title: 'Essay on Climate Change', description: 'Write 500 words essay', subject: 'English', class: 'Class 9', category: 'Project', difficulty: 'Hard', dueDate: '2024-11-28', totalMarks: 50, submittedCount: 28, totalStudents: 40 },
-  { id: 3, title: 'Lab Report - Experiment 3', description: 'Submit detailed lab report', subject: 'Science', class: 'Class 10', category: 'Classwork', difficulty: 'Medium', dueDate: '2024-11-22', totalMarks: 30, submittedCount: 42, totalStudents: 45 },
-  { id: 4, title: 'Poem Memorization', description: 'Memorize and recite', subject: 'Urdu', class: 'Class 8', category: 'Homework', difficulty: 'Easy', dueDate: '2024-11-24', totalMarks: 10, submittedCount: 38, totalStudents: 42 },
-  { id: 5, title: 'Islamic History Quiz', description: 'Online quiz on Islamic history', subject: 'Islamiat', class: 'Class 9', category: 'Quiz', difficulty: 'Medium', dueDate: '2024-11-26', totalMarks: 25, submittedCount: 32, totalStudents: 40 }
-])
-
-// Submissions Data
-const submissions = ref([
-  { id: 1, studentName: 'Ahmed Ali', rollNo: '101', submittedDate: '2024-11-20 10:30 AM', status: 'Submitted', fileCount: 2, marks: null, totalMarks: 20 },
-  { id: 2, studentName: 'Fatima Hassan', rollNo: '102', submittedDate: '2024-11-20 09:15 AM', status: 'Reviewed', fileCount: 1, marks: 18, totalMarks: 20 },
-  { id: 3, studentName: 'Ali Raza', rollNo: '103', submittedDate: '2024-11-21 11:00 AM', status: 'Late', fileCount: 3, marks: null, totalMarks: 20 },
-  { id: 4, studentName: 'Sara Ahmed', rollNo: '104', submittedDate: null, status: 'Pending', fileCount: 0, marks: null, totalMarks: 20 }
-])
-
-// Calendar Data
-const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const calendarDates = ref([
-  { date: '2024-11-17', day: 17, isToday: false, homework: [] },
-  { date: '2024-11-18', day: 18, isToday: false, homework: [{ id: 1, subject: 'Math', difficulty: 'Medium' }] },
-  { date: '2024-11-19', day: 19, isToday: false, homework: [{ id: 2, subject: 'English', difficulty: 'Hard' }] },
-  { date: '2024-11-20', day: 20, isToday: false, homework: [{ id: 3, subject: 'Science', difficulty: 'Easy' }] },
-  { date: '2024-11-21', day: 21, isToday: true, homework: [{ id: 4, subject: 'Urdu', difficulty: 'Easy' }, { id: 5, subject: 'Math', difficulty: 'Medium' }] },
-  { date: '2024-11-22', day: 22, isToday: false, homework: [{ id: 6, subject: 'Islamiat', difficulty: 'Medium' }] },
-  { date: '2024-11-23', day: 23, isToday: false, homework: [] }
-])
-
-// Analytics Data
-const subjectStats = ref([
-  { subject: 'Mathematics', completionRate: 88, submitted: 132, total: 150 },
-  { subject: 'English', completionRate: 82, submitted: 123, total: 150 },
-  { subject: 'Science', completionRate: 90, submitted: 135, total: 150 },
-  { subject: 'Urdu', completionRate: 85, submitted: 128, total: 150 },
-  { subject: 'Islamiat', completionRate: 92, submitted: 138, total: 150 }
-])
-
-const topPerformers = ref([
-  { id: 1, name: 'Fatima Hassan', class: 'Class 10-A', avgMarks: 95 },
-  { id: 2, name: 'Ahmed Ali', class: 'Class 10-A', avgMarks: 92 },
-  { id: 3, name: 'Sara Ahmed', class: 'Class 9-B', avgMarks: 90 }
-])
-
-const needsAttention = ref([
-  { id: 1, name: 'Ali Raza', class: 'Class 10-A', submissionRate: 45 },
-  { id: 2, name: 'Hassan Khan', class: 'Class 9-B', submissionRate: 52 },
-  { id: 3, name: 'Ayesha Malik', class: 'Class 8-C', submissionRate: 58 }
-])
-
-const teacherStats = ref([
-  { id: 1, name: 'Ms. Sarah Ahmed', assignmentsCreated: 45, avgCompletionRate: 88, avgMarks: 82, feedbackGiven: 42 },
-  { id: 2, name: 'Mr. Ali Khan', assignmentsCreated: 38, avgCompletionRate: 85, avgMarks: 79, feedbackGiven: 35 },
-  { id: 3, name: 'Ms. Fatima Hassan', assignmentsCreated: 42, avgCompletionRate: 90, avgMarks: 85, feedbackGiven: 40 }
-])
-
 // New Assignment Form
-const newAssignment = ref({
+const newAssignment = ref<Omit<Homework, 'id'>>({
   title: '',
   subject: '',
   description: '',
   class: '',
   section: '',
+  teacherId: 'current_teacher_id', // TODO: Get from auth
   category: 'Homework',
   difficulty: 'Medium',
   totalMarks: 100,
   dueDate: '',
+  assignedDate: new Date().toISOString().split('T')[0],
   videoLink: '',
   references: '',
   allowLateSubmission: false,
@@ -600,6 +576,61 @@ const newAssignment = ref({
   autoNotifyParents: true,
   sendSMS: false
 })
+
+// Stats (Computed from data)
+const totalAssignments = computed(() => assignments.value.length)
+// Note: To get accurate submission counts, we'd need to fetch all submissions or store counts on the assignment document.
+// For now, we'll estimate or show 0 until we implement cloud functions to update counts.
+const submittedCount = ref(0) 
+const pendingCount = ref(0)
+const lateSubmissions = ref(0)
+const avgCompletionRate = ref(0)
+const avgMarks = ref(0)
+
+// Fetch Data
+onMounted(() => {
+  subscribeToHomework((data) => {
+    assignments.value = data
+    calculateStats()
+  })
+})
+
+watch(selectedAssignmentForReview, (newId: string) => {
+  if (newId) {
+    subscribeToSubmissions(newId, (data) => {
+      submissions.value = data
+    })
+  } else {
+    submissions.value = []
+  }
+})
+
+function calculateStats() {
+  // totalAssignments is computed, no need to assign
+  
+  // Mocking submission counts for now as we don't have a direct way to get them without fetching all submissions
+  // In a real app, we would have a cloud function updating a 'stats' document or 'submittedCount' on the assignment
+  const totalStudents = 30 // Mock class size
+  
+  let submitted = 0
+  let pending = 0
+  let late = 0
+  
+  assignments.value.forEach(a => {
+    // Mock data for demo purposes if fields are missing
+    // @ts-ignore
+    const subCount = a.submittedCount || Math.floor(Math.random() * totalStudents)
+    submitted += subCount
+    pending += (totalStudents - subCount)
+  })
+  
+  submittedCount.value = submitted
+  pendingCount.value = pending
+  lateSubmissions.value = Math.floor(submitted * 0.1) // Mock 10% late
+  
+  avgCompletionRate.value = totalAssignments.value ? Math.round((submitted / (totalAssignments.value * totalStudents)) * 100) : 0
+  avgMarks.value = 78 // Mock average
+}
 
 // Computed
 const filteredAssignments = computed(() => {
@@ -643,49 +674,161 @@ function getSubmissionStatusColor(status: string) {
   return colors[status] || 'bg-gray-100 text-gray-700'
 }
 
-function viewAssignment(assignment: typeof assignments.value[0]) {
-  console.log('Viewing assignment:', assignment)
+function viewAssignment(assignment: Homework) {
+  alert(`Viewing Assignment:\nTitle: ${assignment.title}\nSubject: ${assignment.subject}\nDue: ${assignment.dueDate}`)
 }
 
-function editAssignment(assignment: typeof assignments.value[0]) {
-  console.log('Editing assignment:', assignment)
+function editAssignment(assignment: Homework) {
+  // Populate form with assignment data
+  newAssignment.value = {
+    title: assignment.title,
+    subject: assignment.subject,
+    description: assignment.description,
+    class: assignment.class,
+    section: assignment.section,
+    teacherId: assignment.teacherId,
+    category: assignment.category,
+    difficulty: assignment.difficulty,
+    totalMarks: assignment.totalMarks,
+    dueDate: assignment.dueDate,
+    assignedDate: assignment.assignedDate,
+    videoLink: assignment.videoLink || '',
+    references: assignment.references || '',
+    allowLateSubmission: assignment.allowLateSubmission,
+    allowResubmission: assignment.allowResubmission,
+    autoNotifyParents: assignment.autoNotifyParents,
+    sendSMS: assignment.sendSMS
+  }
+  showCreateAssignment.value = true
 }
 
-function duplicateAssignment(assignment: typeof assignments.value[0]) {
-  console.log('Duplicating assignment:', assignment)
-  alert(`Assignment "${assignment.title}" duplicated successfully!`)
+async function duplicateAssignment(assignment: Homework) {
+  if (!confirm(`Are you sure you want to duplicate "${assignment.title}"?`)) return
+
+  try {
+    const { id, ...rest } = assignment
+    await createHomework({
+      ...rest,
+      title: `${rest.title} (Copy)`,
+      createdAt: new Date()
+    })
+    showToastMessage(`Assignment "${assignment.title}" duplicated successfully!`, 'success')
+  } catch (error) {
+    console.error('Error duplicating assignment:', error)
+    showToastMessage('Failed to duplicate assignment', 'error')
+  }
 }
 
-function reviewSubmission(submission: typeof submissions.value[0]) {
-  console.log('Reviewing submission:', submission)
+async function handleDeleteAssignment(id: string) {
+  if (!confirm('Are you sure you want to delete this assignment?')) return
+
+  try {
+    await deleteHomework(id)
+    showToastMessage('Assignment deleted successfully!', 'success')
+  } catch (error) {
+    console.error('Error deleting assignment:', error)
+    showToastMessage('Failed to delete assignment', 'error')
+  }
 }
 
-function createAssignment() {
+async function createAssignment() {
   if (!newAssignment.value.title || !newAssignment.value.subject || !newAssignment.value.class) {
-    alert('Please fill all required fields')
+    showToastMessage('Please fill all required fields', 'error')
     return
   }
 
-  alert('Assignment created successfully!')
-  showCreateAssignment.value = false
-
-  // Reset form
-  newAssignment.value = {
-    title: '',
-    subject: '',
-    description: '',
-    class: '',
-    section: '',
-    category: 'Homework',
-    difficulty: 'Medium',
-    totalMarks: 100,
-    dueDate: '',
-    videoLink: '',
-    references: '',
-    allowLateSubmission: false,
-    allowResubmission: false,
-    autoNotifyParents: true,
-    sendSMS: false
+  isLoading.value = true
+  try {
+    await createHomework(newAssignment.value)
+    showToastMessage('Assignment created successfully!', 'success')
+    showCreateAssignment.value = false
+    
+    // Reset form
+    newAssignment.value = {
+      title: '',
+      subject: '',
+      description: '',
+      class: '',
+      section: '',
+      teacherId: 'current_teacher_id',
+      category: 'Homework',
+      difficulty: 'Medium',
+      totalMarks: 100,
+      dueDate: '',
+      assignedDate: new Date().toISOString().split('T')[0],
+      videoLink: '',
+      references: '',
+      allowLateSubmission: false,
+      allowResubmission: false,
+      autoNotifyParents: true,
+      sendSMS: false
+    }
+  } catch (error) {
+    console.error('Error creating assignment:', error)
+    showToastMessage('Failed to create assignment', 'error')
+  } finally {
+    isLoading.value = false
   }
 }
+
+async function reviewSubmission(submission: AssignmentSubmission) {
+  const marks = prompt(`Enter marks for ${submission.studentName} (Max: ${submission.totalMarks})`, submission.marks?.toString() || '')
+  if (marks === null) return
+  
+  const feedback = prompt('Enter feedback (optional)', submission.feedback || '') || ''
+  
+  try {
+    await gradeSubmission(submission.id, Number(marks), feedback)
+    showToastMessage('Submission graded successfully!', 'success')
+  } catch (error) {
+    console.error('Error grading submission:', error)
+    showToastMessage('Failed to grade submission', 'error')
+  }
+}
+
+// Calendar Data (Computed)
+const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const calendarDates = computed(() => {
+  // Simplified calendar logic - just showing next 7 days for demo purposes
+  // In a real app, this would be a full month view logic
+  const dates = []
+  const today = new Date()
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() + i)
+    const dateStr = date.toISOString().split('T')[0]
+    
+    dates.push({
+      date: dateStr,
+      day: date.getDate(),
+      isToday: i === 0,
+      homework: assignments.value.filter(a => a.dueDate === dateStr)
+    })
+  }
+  return dates
+})
+
+// Analytics Data (Computed)
+const subjectStats = computed(() => {
+  const stats: Record<string, { total: number, submitted: number }> = {}
+  
+  assignments.value.forEach(a => {
+    if (!stats[a.subject]) {
+      stats[a.subject] = { total: 0, submitted: 0 }
+    }
+    stats[a.subject].total++
+    // stats[a.subject].submitted += a.submittedCount || 0 // Need submittedCount in Homework type or separate fetch
+  })
+  
+  return Object.entries(stats).map(([subject, data]) => ({
+    subject,
+    total: data.total,
+    submitted: data.submitted,
+    completionRate: data.total ? Math.round((data.submitted / (data.total * 30)) * 100) : 0 // Mocking 30 students per class
+  }))
+})
+
+const topPerformers = ref<any[]>([]) // Would need student-level aggregation
+const needsAttention = ref<any[]>([]) // Would need student-level aggregation
+const teacherStats = ref<any[]>([]) // Would need teacher-level aggregation
 </script>

@@ -340,17 +340,41 @@ export interface BusStop {
 }
 
 export interface Homework {
-  id: number | string
+  id: string
   title: string
   description: string
   subject: string
   class: string
   section: string
-  teacherId: number
+  teacherId: string
   assignedDate: string
   dueDate: string
   totalMarks: number
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'Easy' | 'Medium' | 'Hard'
+  category: 'Homework' | 'Classwork' | 'Project' | 'Quiz'
+  videoLink?: string
+  references?: string
+  allowLateSubmission: boolean
+  allowResubmission: boolean
+  autoNotifyParents: boolean
+  sendSMS: boolean
+  attachments?: string[]
+  createdAt?: any
+  updatedAt?: any
+}
+
+export interface AssignmentSubmission {
+  id: string
+  assignmentId: string
+  studentId: string
+  studentName: string
+  rollNo: string
+  submittedDate: string
+  status: 'Submitted' | 'Reviewed' | 'Late' | 'Pending'
+  files: string[]
+  marks?: number
+  feedback?: string
+  totalMarks: number
 }
 
 export interface Asset {
