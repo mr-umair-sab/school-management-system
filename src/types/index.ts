@@ -280,6 +280,7 @@ export interface PTMSchedule {
   venue: string
   bookedSlots: number
   totalSlots: number
+  availableSlots?: number
   status: 'scheduled' | 'ongoing' | 'completed'
 }
 
@@ -486,4 +487,83 @@ export interface Meeting {
   organizer: number
   participants: number[]
   agenda: string
+}
+
+export interface SMS {
+  id: string
+  category: string
+  message: string
+  recipients: string[]
+  sentDate: string
+  deliveryRate: number
+  status: 'sent' | 'failed' | 'pending'
+  createdAt?: any
+}
+
+export interface Email {
+  id: string
+  templateId: string
+  subject: string
+  body: string
+  recipients: string[]
+  sentDate: string
+  status: 'sent' | 'failed' | 'pending'
+  createdAt?: any
+}
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  subject: string
+  body: string
+  icon: string
+  usageCount: number
+}
+
+export interface PushNotification {
+  id: string
+  title: string
+  body: string
+  recipients: string[]
+  sentDate: string
+  status: 'sent' | 'failed' | 'pending'
+  createdAt?: any
+}
+
+export interface EmergencyAlert {
+  id: string
+  title: string
+  message: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  sentDate: string
+  recipients: string[]
+  createdAt?: any
+}
+
+export interface InternalMessage {
+  id: string
+  senderId: string
+  senderName: string
+  recipientId: string
+  recipientName: string
+  category: string
+  subject: string
+  message: string
+  sentDate: string
+  read: boolean
+  createdAt?: any
+}
+
+export interface Feedback {
+  id: string
+  userId: string
+  userName: string
+  userType: 'student' | 'parent' | 'teacher'
+  category: string
+  subject: string
+  message: string
+  submittedDate: string
+  status: 'pending' | 'reviewed' | 'resolved'
+  response?: string
+  createdAt?: any
 }
